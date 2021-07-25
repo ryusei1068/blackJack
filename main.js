@@ -215,17 +215,15 @@ class Player {
                 let index = Math.floor(Math.random() * option.length);
                 this.gameStatus = option[index];
                 // doubleが選択された場合、ベット金額を2倍にした額が所持しているチップを超えていないか確認
-                if (this.gameStatus === 'double') {
-                    if (this.chips > this.bet * 2) {
-                        this.bet *= 2;
-                    }
-                    else {
-                        let index = Math.floor(Math.random() * (option.length - 1));
-                        this.gameStatus = option[index];
-                    }
+                if (this.gameStatus === 'double' && this.chips > this.bet * 2) {
+                    this.bet *= 2;
+                }
+                else {
+                    let index = Math.floor(Math.random() * (option.length - 1));
+                    this.gameStatus = option[index];
                 }
             }
-            else if (this.gameStatus != 'surrender' && this.gameStatus != 'double') {
+            else if (this.gameStatus === 'stand') {
                 let index = Math.floor(Math.random() * (2 - 1) + 1);
                 this.gameStatus = option[index];
             }
@@ -330,6 +328,9 @@ class Table {
         }
 
         let decision = player.promptPlayer();
+        if (player.chips < minimum) {
+            player.gameStatus = 'broken';
+        }
         if (decision.action === 'hit') {
             player.hand.push(this.deck.drawOne());
             let score = player.getHandScore();
@@ -373,9 +374,15 @@ class Table {
                 }
             }
             else if (this.house.gameStatus === 'bust' || player.getHandScore() > houseHandScore) {
-                player.winAmount = hasPlayerBlackJack ? player.bet * 1.5 : 
-                                    player.gameStatus === 'double' ? player.bet * 2 : 
-                                    player.gameStatus === 'stand' ? player.bet : player.bet;
+                if (hasPlayerBlackJack) {
+                    player.winAmount = player.bet * 1.5;
+                }
+                else if (player.gameStatus === 'double') {
+                    player.winAmount = player.bet * 2;
+                }
+                else if (player.gameStatus === 'stand') {
+                    player.winAmount = player.bet;
+                }
             }
             else if (this.house.gameStatus != 'bust' && houseHandScore > player.getHandScore()) {
                 if (player.gameStatus === 'double') {
@@ -391,7 +398,9 @@ class Table {
             let playerInfo = `name : ${player.name}, action : ${player.gameStatus}, winAmount : ${player.winAmount}, chips : ${player.chips}, bet ${player.bet}`;
             // 各プレイヤーの結果ログ　userName, final Action, winAmount
             this.resultsLog.push(playerInfo);
+
         }
+        this.gamePhase = 'betting';
     }
 
     /*
@@ -444,19 +453,16 @@ class Table {
     */
     haveTurn(userData) {
         //TODO: ここから挙動をコードしてください
-        if (this.allPlayerActionsResolved()) {
-            this.gamePhase = 'acting';
-        }
-        if (this.gamePhase === 'betting') {
-            this.blackjackAssignPlayerHands();
-            let player = this.getTurnPlayer();
-            if (player.chips >= Math.min(...this.betDenominations)) {
-                this.evaluateMove(player);
-                console.log(player);
-            }
-        }
         if (this.allPlayerActionsBroken()) {
             this.gamePhase = 'roundOver';
+        }
+        else if (this.allPlayerActionsResolved()) {
+            this.gamePhase = 'acting';
+        }
+        else {
+            this.blackjackAssignPlayerHands();
+            let player = this.getTurnPlayer();
+            this.evaluateMove(player);
         }
         this.turnCounter++;
     }
@@ -516,7 +522,6 @@ while(table1.gamePhase != 'roundOver') {
         table1.blackjackClearPlayerHandsAndBets();
         table1.deck.resetDeck();
         table1.blackjackAssignPlayerHands();
-        table1.gamePhase = 'betting';
     }
 }
 console.log(table1.resultsLog);
