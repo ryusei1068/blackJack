@@ -68,7 +68,6 @@
 
 
 
-
 class Card {
     /*
     String suit : {"H", "D", "C", "S"}から選択
@@ -215,7 +214,7 @@ class Player {
                 let index = Math.floor(Math.random() * option.length);
                 this.gameStatus = option[index];
                 // doubleが選択された場合、ベット金額を2倍にした額が所持しているチップを超えていないか確認
-                if (this.gameStatus === 'double' && this.chips > this.bet * 2) {
+                if (this.gameStatus === 'double' && this.chips >= this.bet * 2) {
                     this.bet *= 2;
                 }
                 else {
@@ -246,7 +245,6 @@ class Player {
         let total = 0;
         let ace = 0;
         for (let card of this.hand) {
-            if (card === undefined) continue;
             total += card.getRankNumber();
             ace = card.rank === 'A' ? ace + 1 : ace;
         }
@@ -308,6 +306,9 @@ class Table {
         this.resultsLog = [];
 
         this.turnCounter = 0;
+        
+        // round counter
+        this.roundeCounter = 1;
     }
     /*
         Player player : テーブルは、player.promptPlayer()を使用してGameDecisionを取得し、GameDecisionとgameTypeに応じてPlayerの状態を更新します。
@@ -328,9 +329,6 @@ class Table {
         }
 
         let decision = player.promptPlayer();
-        if (player.chips < minimum) {
-            player.gameStatus = 'broken';
-        }
         if (decision.action === 'hit') {
             player.hand.push(this.deck.drawOne());
             let score = player.getHandScore();
@@ -355,6 +353,7 @@ class Table {
     blackjackEvaluateAndGetRoundResults() {
         //TODO: ここから挙動をコードしてください。    
         let houseHandScore = this.house.getHandScore();
+        this.resultsLog.push(`Round ${this.roundeCounter}`)
         // ハウスがブラックジャックの場合
         for (let player of this.players) {
             let hasPlayerBlackJack = player.getHandScore() === 21 && player.hand.length === 2;
@@ -393,14 +392,18 @@ class Table {
                 }
             }
             
-            // chipの更新
-            player.chips += player.winAmount;
+            
             let playerInfo = `name : ${player.name}, action : ${player.gameStatus}, winAmount : ${player.winAmount}, chips : ${player.chips}, bet ${player.bet}`;
             // 各プレイヤーの結果ログ　userName, final Action, winAmount
             this.resultsLog.push(playerInfo);
 
+            // chipの更新
+            player.chips += player.winAmount;
         }
         this.gamePhase = 'betting';
+
+        // Round 更新
+        this.roundeCounter++;
     }
 
     /*
@@ -409,6 +412,7 @@ class Table {
     */
     blackjackAssignPlayerHands() {
         //TODO: ここから挙動をコードしてください。
+        this.deck.resetDeck();
         this.deck.shuffle();
         for (let player of this.players) {
             // 各プレイヤー2枚ずつ
@@ -430,7 +434,7 @@ class Table {
         // broken -> chip消失したユーザー　ゲームへ参加できない
         for (let player of this.players) {
             player.hand = [];
-            player.gameStatus = player.chips != 0 ? 'betting' : 'broken';
+            player.gameStatus = player.chips > 0 ? 'betting' : 'broken';
             player.bet = 0;
         }
 
@@ -520,7 +524,6 @@ while(table1.gamePhase != 'roundOver') {
     if (table1.gamePhase === 'acting') {
         table1.blackjackEvaluateAndGetRoundResults();
         table1.blackjackClearPlayerHandsAndBets();
-        table1.deck.resetDeck();
         table1.blackjackAssignPlayerHands();
     }
 }
