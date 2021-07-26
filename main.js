@@ -127,15 +127,12 @@ class Deck {
         return newDeck;
     }
 /*
-    return null : このメソッドは、デッキの状態を更新します。
-
-    カードがランダムな順番になるようにデッキをシャッフルします。
+    return null : このメソッドは、デッキの状態を更新  | update condtion of Deck
+    カードがランダムな順番になるようにデッキをシャッフル。
 */
     shuffle(){
-        //TODO: ここから挙動をコードしてください。
         let deckSize = this.cards.length;
         for (let i = deckSize-1; i >= 0 ; i--) {
-            // ランダムに得た数値をインデックスとし、two pointerで入れ替えます。
             let j = Math.floor(Math.random() * (i + 1));
             let temp = this.cards[i];
             this.cards[i] = this.cards[j];
@@ -145,13 +142,11 @@ class Deck {
 
 /*
     String gameType : どのゲームにリセットするか
-    return null : このメソッドは、デッキの状態を更新します。
+    return null : このメソッドは、デッキの状態を更新 
 */
-    resetDeck() {
-        //TODO: ここから挙動をコードしてください。
+    resetDeck(gameType) {
         this.cards = null;
         this.cards = Deck.generateDeck();
-        this.shuffle();
     }
     
 /*
@@ -159,7 +154,6 @@ class Deck {
     カード配列から先頭のカード要素をポップして返します。
 */
     drawOne(){
-        //TODO: code behavior here
         return this.cards.pop();
     }
 }
@@ -241,7 +235,6 @@ class Player {
     合計が21を超える場合、手札の各エースについて、合計が21以下になるまで10を引きます。
 */
     getHandScore() {
-        //TODO: ここから挙動をコードしてください。
         let total = 0;
         let ace = 0;
         for (let card of this.hand) {
@@ -308,7 +301,7 @@ class Table {
         this.turnCounter = 0;
         
         // round counter
-        this.roundeCounter = 1;
+        this.roundCounter = 1;
     }
     /*
         Player player : テーブルは、player.promptPlayer()を使用してGameDecisionを取得し、GameDecisionとgameTypeに応じてPlayerの状態を更新します。
@@ -320,7 +313,6 @@ class Table {
 
 
     evaluateMove(player) {
-        //TODO: ここから挙動をコードしてください。
         let minimum = Math.min(...this.betDenominations);
         while (true) {
             let i = Math.floor(Math.random() * this.betDenominations.length);
@@ -348,12 +340,11 @@ class Table {
 
     /*
         return String : 新しいターンが始まる直前の全プレイヤーの状態を表す文字列。
-        NOTE: このメソッドの出力は、各ラウンドの終了時にテーブルのresultsLogメンバを更新するために使用されます。
+        NOTE: このメソッドの出力は、各ラウンドの終了時にテーブルのresultsLogメンバを更新するために使用。
     */
     blackjackEvaluateAndGetRoundResults() {
-        //TODO: ここから挙動をコードしてください。    
         let houseHandScore = this.house.getHandScore();
-        this.resultsLog.push(`Round ${this.roundeCounter}`)
+        this.resultsLog.push(`Round ${this.roundCounter}`)
         // ハウスがブラックジャックの場合
         for (let player of this.players) {
             let hasPlayerBlackJack = player.getHandScore() === 21 && player.hand.length === 2;
@@ -403,7 +394,7 @@ class Table {
         this.gamePhase = 'betting';
 
         // Round 更新
-        this.roundeCounter++;
+        this.roundCounter++;
     }
 
     /*
@@ -411,7 +402,6 @@ class Table {
         NOTE: プレイヤーのタイプが「ハウス」の場合は、別の処理を行う必要があります。
     */
     blackjackAssignPlayerHands() {
-        //TODO: ここから挙動をコードしてください。
         this.deck.resetDeck();
         this.deck.shuffle();
         for (let player of this.players) {
@@ -430,7 +420,6 @@ class Table {
         return null : テーブル内のすべてのプレイヤーの状態を更新し、手札を空の配列に、ベットを0に設定します。
     */
     blackjackClearPlayerHandsAndBets() {
-        //TODO: ここから挙動をコードしてください。
         // broken -> chip消失したユーザー　ゲームへ参加できない
         for (let player of this.players) {
             player.hand = [];
@@ -446,7 +435,6 @@ class Table {
         return Player : 現在のプレイヤー
     */
     getTurnPlayer() {
-        //TODO: ここから挙動をコードしてください。
         let numberOfPlayers = this.players.length;
         let player = this.players[this.turnCounter % numberOfPlayers];
         return player;
@@ -456,7 +444,6 @@ class Table {
         return Null : このメソッドはテーブルの状態を更新するだけで、値を返しません。
     */
     haveTurn(userData) {
-        //TODO: ここから挙動をコードしてください
         if (this.allPlayerActionsBroken()) {
             this.gamePhase = 'roundOver';
         }
@@ -475,7 +462,6 @@ class Table {
         return Boolean : テーブルがプレイヤー配列の最初のプレイヤーにフォーカスされている場合はtrue、そうでない場合はfalseを返します。
     */
     onFirstPlayer() {
-        //TODO: ここから挙動をコードしてください。
         let numberOfPlayers = this.players.length;
         return this.turnCounter % numberOfPlayers === 0 ? true : false;
     }
@@ -484,7 +470,6 @@ class Table {
         return Boolean : テーブルがプレイヤー配列の最後のプレイヤーにフォーカスされている場合はtrue、そうでない場合はfalseを返します。
     */
     onLastPlayer() {
-        //TODO: ここから挙動をコードしてください。
         let numberOfPlayers = this.players.length;
         return this.turnCounter % numberOfPlayers === numberOfPlayers ? true : false;
     }
@@ -493,7 +478,6 @@ class Table {
         全てのプレイヤーがセット{'broken', 'bust', 'stand', 'surrender'}のgameStatusを持っていればtrueを返し、持っていなければfalseを返します。
     */
     allPlayerActionsResolved() {
-        //TODO: ここから挙動をコードしてください。
         let hashMap = {
             'bust' : true,
             'stand' : true,
@@ -518,13 +502,58 @@ class Table {
 }
 
 
-let table1 = new Table('blackjack');
-while(table1.gamePhase != 'roundOver') {
-    table1.haveTurn();
-    if (table1.gamePhase === 'acting') {
-        table1.blackjackEvaluateAndGetRoundResults();
-        table1.blackjackClearPlayerHandsAndBets();
-        table1.blackjackAssignPlayerHands();
+// let table1 = new Table('blackjack');
+// while(table1.gamePhase != 'roundOver') {
+//     table1.haveTurn();
+//     if (table1.gamePhase === 'acting') {
+//         table1.blackjackEvaluateAndGetRoundResults();
+//         table1.blackjackClearPlayerHandsAndBets();
+//         table1.blackjackAssignPlayerHands();
+//     }
+// }
+// console.log(table1.resultsLog);
+
+/**
+ * MVC
+ * Model -> game logic
+ * View -> UI
+ * Controller -> crossLink
+ */
+
+
+// UI
+class View {
+    // LP
+
+
+    // option tag  
+    // choose game type
+    static createOptionTagForChoiceGame(gameList) {
+        // <div class="choose-game-type">
+        //     <select class="col-12" id='options'>
+        //         <option value="blackjack">Blackjack</option>
+        //         <option value="poker">Poker</option>
+        //     </select>
+        // </div>
+
+        let chooseGameContainer = document.createElement('div');
+        chooseGameContainer.classList.add('choose-game-type');
+
+        let selectTag = document.createElement("select");
+        selectTag.classList.add('col-12');
+
+        for (let game of gameList) {
+            let option = `<option value="${game}">${game}</option>`
+            selectTag.innerHTML += option;
+        }
+        
+        chooseGameContainer.appendChild(selectTag);
+        return chooseGameContainer;
     }
 }
-console.log(table1.resultsLog);
+
+
+// event lisnner
+class Controller {
+
+}
