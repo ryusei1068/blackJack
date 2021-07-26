@@ -502,16 +502,17 @@ class Table {
 }
 
 
-// let table1 = new Table('blackjack');
-// while(table1.gamePhase != 'roundOver') {
-//     table1.haveTurn();
-//     if (table1.gamePhase === 'acting') {
-//         table1.blackjackEvaluateAndGetRoundResults();
-//         table1.blackjackClearPlayerHandsAndBets();
-//         table1.blackjackAssignPlayerHands();
-//     }
-// }
-// console.log(table1.resultsLog);
+let table1 = new Table('blackjack');
+while(table1.gamePhase != 'roundOver') {
+    table1.haveTurn();
+
+    if (table1.gamePhase === 'acting') {
+        table1.blackjackEvaluateAndGetRoundResults();
+        table1.blackjackClearPlayerHandsAndBets();
+        table1.blackjackAssignPlayerHands();
+    }
+}
+console.log(table1.resultsLog);
 
 /**
  * MVC
@@ -521,11 +522,11 @@ class Table {
  */
 
 
+const gameList = ['Blackjack'];
+
+
 // UI
 class View {
-    // LP
-
-
     // option tag  
     // choose game type
     static createOptionTagForChoiceGame(gameList) {
@@ -550,6 +551,22 @@ class View {
         chooseGameContainer.appendChild(selectTag);
         return chooseGameContainer;
     }
+
+    static createButton(btnName, btnColor) {
+        // <div class="mt-2 d-flex justify-content-center">
+        //     <a href="" class="btn btn-success">Start Game</a>
+        // </div>
+        let div = document.createElement('div');
+        div.classList.add('mt-2', 'd-flex', 'justify-content-center');
+
+        let btn = `<a href="" class="btn ${btnColor}">${btnName}</a>`
+
+        div.innerHTML += btn;
+        div.innerHTML += btn
+        return div;
+    }
+
+
 }
 
 
