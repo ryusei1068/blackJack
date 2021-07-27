@@ -583,10 +583,10 @@ class View {
 
 
 
-    static initialScreen(gameList, btnName, btnColor) {
+    static initialScreen(gameList, btnName, btnColor, tittle) {
         let titleAndTextArea = 
         `
-            <p class="text-white text-center"> Welcome to Card Game! </p>
+            <p class="text-white text-center">${tittle}</p>
             <div class="name-field">
                 <input type="text" class="col-12" placeholder="name">
             </div>
@@ -596,8 +596,8 @@ class View {
         container.id = 'initial-screen';
         container.innerHTML = titleAndTextArea;
 
-        let option = this.createOptionTagForChoiceGame(gameList);
-        let btn = this.createButton(btnName, btnColor);
+        let option = View.createOptionTagForChoiceGame(gameList);
+        let btn = View.createButton(btnName, btnColor);
 
         container.appendChild(option);
         container.appendChild(btn);
@@ -610,9 +610,28 @@ class View {
 // event lisnner
 class Controller {
 
+    // return [width, height]
+    static getWindowSize() {
+        return [window.innerWidth, window.innerHeight];
+    }
+
+    static gameStart() {
+
+    }
+
+    static createIinitailScreen(gameList, btnName, btnColor, title) {
+        let windowSize = Controller.getWindowSize();
+        if (windowSize[0] < 768 || windowSize[1] < 1024) {
+            alert('Do not support this window size \nPlease resize a window')
+        }
+
+        View.initialScreen(gameList, btnName, btnColor, title);
+    }
+
     
 
 }
 
 
-View.initialScreen(gameList, 'StartGame', 'btn-success');
+// View.initialScreen(gameList, 'StartGame', 'btn-success', 'Welcome to Card Game!');
+Controller.createIinitailScreen(gameList, 'StartGame', 'btn-success', 'Welcome to Card Game!');
