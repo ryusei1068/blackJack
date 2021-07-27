@@ -232,7 +232,7 @@ class Player {
 /*
     return Number : 手札の合計
 
-    合計が21を超える場合、手札の各エースについて、合計が21以下になるまで10を引きます。
+    合計が21を超える場合、手札の各エースについて、合計が21以下になるまで10を引く。
 */
     getHandScore() {
         let total = 0;
@@ -256,7 +256,7 @@ class GameDecision {
     String action : プレイヤーのアクションの選択。（ブラックジャックでは、hit、standなど。）
     Number amount : プレイヤーがベットする数値。
 
-    これはPlayer.promptPlayer()は常にreturnする、標準化されたフォーマットです。
+    これはPlayer.promptPlayer()は常にreturnする、標準化されたフォーマット。
 */
     constructor(action, amount) {
         // アクション
@@ -283,8 +283,8 @@ class Table {
         // テーブルのカードのデッキ
         this.deck = new Deck(this.gameType);
         
-        // プレイしているゲームに応じて、プレイヤー、gamePhases、ハウスの表現が異なるかもしれません。
-        // 今回はとりあえず3人のAIプレイヤーとハウス、「betting」フェースの始まりにコミットしましょう。
+        // プレイしているゲームに応じて、プレイヤー、gamePhases、ハウスの表現が異なるかも。
+        // 今回はとりあえず3人のAIプレイヤーとハウス、「betting」フェースの始まりにコミット。
         this.players = [];
         // Player 初期化
         for (let i = 0; i < 3; i++) {
@@ -295,7 +295,7 @@ class Table {
         // {'betting', 'acting', 'roundOver', gameOver'} 
         this.gamePhase = 'betting'
 
-        // これは各ラウンドの結果をログに記録するための文字列の配列です。
+        // これは各ラウンドの結果をログに記録するための文字列の配列。
         this.resultsLog = [];
 
         this.turnCounter = 0;
@@ -304,11 +304,11 @@ class Table {
         this.roundCounter = 1;
     }
     /*
-        Player player : テーブルは、player.promptPlayer()を使用してGameDecisionを取得し、GameDecisionとgameTypeに応じてPlayerの状態を更新します。
-        return Null : このメソッドは、プレーヤの状態を更新するだけです。
+        Player player : テーブルは、player.promptPlayer()を使用してGameDecisionを取得し、GameDecisionとgameTypeに応じてPlayerの状態を更新。
+        return Null : このメソッドは、プレーヤの状態を更新。
 
         EX:
-        プレイヤーが「ヒット」し、手札が21以上の場合、gameStatusを「バスト」に設定し、チップからベットを引きます。
+        プレイヤーが「ヒット」し、手札が21以上の場合、gameStatusを「バスト」に設定し、チップからベットを subtract。
     */
 
 
@@ -398,8 +398,8 @@ class Table {
     }
 
     /*
-        return null : デッキから2枚のカードを手札に加えることで、全プレイヤーの状態を更新します。
-        NOTE: プレイヤーのタイプが「ハウス」の場合は、別の処理を行う必要があります。
+        return null : デッキから2枚のカードを手札に加えることで、全プレイヤーの状態を更新。
+        NOTE: プレイヤーのタイプが「ハウス」の場合は、別の処理を行う必要。
     */
     blackjackAssignPlayerHands() {
         this.deck.resetDeck();
@@ -417,7 +417,7 @@ class Table {
     }
 
     /*
-        return null : テーブル内のすべてのプレイヤーの状態を更新し、手札を空の配列に、ベットを0に設定します。
+        return null : テーブル内のすべてのプレイヤーの状態を更新し、手札を空の配列に、ベットを0に設定。
     */
     blackjackClearPlayerHandsAndBets() {
         // broken -> chip消失したユーザー　ゲームへ参加できない
@@ -441,7 +441,7 @@ class Table {
     }
 
     /*
-        return Null : このメソッドはテーブルの状態を更新するだけで、値を返しません。
+        return Null : このメソッドはテーブルの状態を更新する only。
     */
     haveTurn(userData) {
         if (this.allPlayerActionsBroken()) {
@@ -459,7 +459,7 @@ class Table {
     }
 
     /*
-        return Boolean : テーブルがプレイヤー配列の最初のプレイヤーにフォーカスされている場合はtrue、そうでない場合はfalseを返します。
+        return Boolean : テーブルがプレイヤー配列の最初のプレイヤーにフォーカスされている場合はtrue、そうでない場合はfalse。
     */
     onFirstPlayer() {
         let numberOfPlayers = this.players.length;
@@ -467,7 +467,7 @@ class Table {
     }
 
     /*
-        return Boolean : テーブルがプレイヤー配列の最後のプレイヤーにフォーカスされている場合はtrue、そうでない場合はfalseを返します。
+        return Boolean : テーブルがプレイヤー配列の最後のプレイヤーにフォーカスされている場合はtrue、そうでない場合はfalse。
     */
     onLastPlayer() {
         let numberOfPlayers = this.players.length;
@@ -475,7 +475,7 @@ class Table {
     }
     
     /*
-        全てのプレイヤーがセット{'broken', 'bust', 'stand', 'surrender'}のgameStatusを持っていればtrueを返し、持っていなければfalseを返します。
+        全てのプレイヤーがセット{'broken', 'bust', 'stand', 'surrender'}のgameStatusを持っていればtrueを返し、持っていなければfalse。
     */
     allPlayerActionsResolved() {
         let hashMap = {
@@ -545,7 +545,7 @@ class View {
 
     // option tag  
     // choose game type
-    static createOptionTagForChoiceGame(gameList) {
+    static optionTagForChoice(gameList) {
         // <div class="choose-game-type">
         //     <select class="col-12" id='options'>
         //         <option value="blackjack">Blackjack</option>
@@ -575,7 +575,7 @@ class View {
         let div = document.createElement('div');
         div.classList.add('mt-2', 'd-flex', 'justify-content-center');
 
-        let btn = `<a href="" class="btn ${btnColor}">${btnName}</a>`
+        let btn = `<a id='start-game' class="btn ${btnColor}">${btnName}</a>`
 
         div.innerHTML += btn;
         return div;
@@ -596,13 +596,49 @@ class View {
         container.id = 'initial-screen';
         container.innerHTML = titleAndTextArea;
 
-        let option = View.createOptionTagForChoiceGame(gameList);
+        let option = View.optionTagForChoice(gameList);
         let btn = View.createButton(btnName, btnColor);
 
         container.appendChild(option);
         container.appendChild(btn);
 
         config.gameDiv.appendChild(container);
+    }
+
+    static createCard(suit, rank) {
+        // <div class="bg-white border mx-2">
+        //     <div class="text-center">
+        //         <img src="/img/dashboard/lessons/projects/diamond.png" alt="" width="50" height="50">
+        //     </div>
+        //     <div class="text-center">
+        //         <p class="m-0">8</p>
+        //     </div>
+        // </div>
+        const suitImg = {
+            "H":"https://recursionist.io/img/dashboard/lessons/projects/heart.png",
+            "D":"https://recursionist.io/img/dashboard/lessons/projects/diamond.png",
+            "C":"https://recursionist.io/img/dashboard/lessons/projects/clover.png",
+            "S":"https://recursionist.io/img/dashboard/lessons/projects/spade.png",
+            "B":"https://cdn.pixabay.com/photo/2018/09/12/09/04/wall-3671612_640.jpg"
+        }
+
+        let card = document.createElement('div');
+        card.classList.add('bg-white', 'border', 'mx-2');
+
+        let imgFrame = document.createElement('div');
+        imgFrame.classList.add('text-center');
+
+        imgFrame.innerHTML = `<img src="${suitImg[suit]}" alt="" width="50" height="50">`
+
+        let rankFrame = document.createElement('div')
+        rankFrame.classList.add('text-center');
+
+        rankFrame.innerHTML = `<p>${rank}</p>`;
+
+        card.appendChild(imgFrame);
+        card.appendChild(rankFrame);
+
+        return card;
     }
 }
 
@@ -622,16 +658,201 @@ class Controller {
     static createIinitailScreen(gameList, btnName, btnColor, title) {
         let windowSize = Controller.getWindowSize();
         if (windowSize[0] < 768 || windowSize[1] < 1024) {
-            alert('Do not support this window size \nPlease resize a window')
+            alert('Do not support a window size \nPlease resize a window')
         }
 
         View.initialScreen(gameList, btnName, btnColor, title);
     }
 
-    
+
 
 }
 
+config.gameDiv.append(View.createCard('H',10));
+// Controller.createIinitailScreen(gameList, 'StartGame', 'btn-success', 'Welcome to Card Game!');
 
-// View.initialScreen(gameList, 'StartGame', 'btn-success', 'Welcome to Card Game!');
-Controller.createIinitailScreen(gameList, 'StartGame', 'btn-success', 'Welcome to Card Game!');
+
+// <div class="col-12">
+//         <div class="pt-5">
+//             <p class="m-0 text-center text-white rem3">Dealer</p>
+
+//             <!-- House Card Row -->
+//             <div id="houesCardDiv" class="d-flex justify-content-center pt-3 pb-5">
+
+//                 <div class="bg-white border mx-2">
+//                     <div class="text-center">
+//                         <img src="/img/dashboard/lessons/projects/spade.png" alt="" width="50" height="50">
+//                     </div>
+//                     <div class="text-center">
+//                         <p class="m-0 ">7</p>
+//                     </div>
+//                 </div>
+
+//                 <div class="bg-white border mx-2">
+//                     <div class="text-center">
+//                         <img src="/img/dashboard/lessons/projects/diamond.png" alt="" width="50" height="50">
+//                     </div>
+//                     <div class="text-center">
+//                         <p class="m-0">8</p>
+//                     </div>
+//                 </div>
+
+//                 <div class="bg-white border mx-2">
+//                     <div class="text-center">
+//                         <img src="/img/dashboard/lessons/projects/heart.png" alt="" width="50" height="50">
+//                     </div>
+//                     <div class="text-center">
+//                         <p class="m-0">9</p>
+//                     </div>
+//                 </div>
+//             </div>
+//         </div>
+
+//         <div class="">
+
+//             <!-- Players Div -->
+//             <div id="playersDiv" class="d-flex justify-content-center">
+
+//                 <!-- nonCurPlayerDiv 1-->
+//                 <div id="nonCurPlayer1Div" class="flex-column">
+
+//                     <p class="m-0 text-white text-center rem3">ai1</p>
+
+//                     <!-- playerInfoDiv -->
+//                     <div class="text-white d-flex m-0 p-0 justify-content-between">
+//                         <p class="rem1 text-left">S:BUST </a>
+//                         <p class="rem1 text-left">B:0 </a>
+//                         <p class="rem1 text-left">R:255 </a>
+//                     </div>
+//                     <!-- cardsDiv -->
+//                     <div class="d-flex justify-content-center">
+//                         <div class="bg-white border mx-2">
+//                             <div class="text-center">
+//                                 <img src="/img/dashboard/lessons/projects/heart.png" alt="" width="50" height="50">
+//                             </div>
+//                             <div class="text-center">
+//                                 <p class="m-0">2</p>
+//                             </div>
+//                         </div>
+//                         <div class="bg-white border mx-2">
+//                             <div class="text-center">
+//                                 <img src="/img/dashboard/lessons/projects/clover.png" alt="" width="50" height="50">
+//                             </div>
+//                             <div class="text-center">
+//                                 <p class="m-0">10</p>
+//                             </div>
+//                         </div>
+//                         <div class="bg-white border mx-2">
+//                             <div class="text-center">
+//                                 <img src="/img/dashboard/lessons/projects/spade.png" alt="" width="50" height="50">
+//                             </div>
+//                             <div class="text-center">
+//                                 <p class="m-0">8</p>
+//                             </div>
+//                         </div><!-- end card -->
+//                     </div><!-- end Cards -->
+//                 </div><!-- end player -->
+
+//                 <!-- curPlayerDiv -->
+//                 <div id = "curPlayerDiv" class="flex-column w-50">
+//                     <p class="m-0 text-white text-center rem3">ai2</p>
+
+//                     <!-- playerInfoDiv -->
+//                     <div class="text-white d-flex m-0 p-0 justify-content-center">
+//                         <p class="rem1 text-left">S:BUST </a>
+//                         <p class="rem1 text-left">B:0 </a>
+//                         <p class="rem1 text-left">R:255 </a>
+//                     </div>
+
+//                     <!-- cardsDiv -->
+//                     <div class="d-flex justify-content-center">
+//                         <div class="bg-white border mx-2">
+//                             <div class="text-center">
+//                                 <img src="/img/dashboard/lessons/projects/heart.png" alt="" width="50" height="50">
+//                             </div>
+//                             <div class="text-center">
+//                                 <p class="m-0">2</p>
+//                             </div>
+//                         </div>
+//                         <div class="bg-white border mx-2">
+//                             <div class="text-center">
+//                                 <img src="/img/dashboard/lessons/projects/clover.png" alt="" width="50" height="50">
+//                             </div>
+//                             <div class="text-center">
+//                                 <p class="m-0">10</p>
+//                             </div>
+//                         </div>
+//                         <div class="bg-white border mx-2">
+//                             <div class="text-center">
+//                                 <img src="/img/dashboard/lessons/projects/spade.png" alt="" width="50" height="50">
+//                             </div>
+//                             <div class="text-center">
+//                                 <p class="m-0">8</p>
+//                             </div>
+//                         </div><!-- end card -->
+//                     </div><!-- end Cards -->
+//                 </div><!-- end player -->
+
+//                 <!-- nonCurPlayer2Div -->
+//                 <div id="nonCurPlayer2Div" class="flex-column">
+
+//                     <p class="m-0 text-white text-center rem3">Yuki</p>
+
+//                     <!-- playerInfoDiv -->
+//                     <div class="text-white d-flex m-0 p-0 justify-content-between">
+//                         <p class="rem1 text-left">S:BUST </a>
+//                         <p class="rem1 text-left">B:0 </a>
+//                         <p class="rem1 text-left">R:255 </a>
+//                     </div>
+
+//                     <!-- cardsDiv -->
+//                     <div class="d-flex justify-content-center">
+//                         <div class="bg-white border mx-2">
+//                             <div class="text-center">
+//                                 <img src="/img/dashboard/lessons/projects/heart.png" alt="" width="50" height="50">
+//                             </div>
+//                             <div class="text-center">
+//                                 <p class="m-0">2</p>
+//                             </div>
+//                         </div>
+//                         <div class="bg-white border mx-2">
+//                             <div class="text-center">
+//                                 <img src="/img/dashboard/lessons/projects/clover.png" alt="" width="50" height="50">
+//                             </div>
+//                             <div class="text-center">
+//                                 <p class="m-0">10</p>
+//                             </div>
+//                         </div>
+//                         <div class="bg-white border mx-2">
+//                             <div class="text-center">
+//                                 <img src="/img/dashboard/lessons/projects/spade.png" alt="" width="50" height="50">
+//                             </div>
+//                             <div class="text-center">
+//                                 <p class="m-0">8</p>
+//                             </div>
+//                         </div><!-- end card -->
+//                     </div><!-- end Cards -->
+//                 </div><!-- end player -->
+//             </div><!-- end players -->
+
+//             <!-- actionsAndBetsDiv -->
+//             <div id="actionsAndBetsDiv" class="d-flex pb-5 pt-4 justify-content-center">
+
+//                 <!-- actionsDiv -->
+//                 <div id ="actionsDiv" class="d-flex flex-wrap w-70">
+//                     <div class="py-2">
+//                         <a class="text-dark btn btn-light px-5 py-1">Surrender</a>
+//                     </div>
+//                     <div class="py-2">
+//                         <a class="btn btn-success px-5 py-1">Stand</a>
+//                     </div>
+//                     <div class="py-2">
+//                         <a class="btn btn-warning px-5 py-1">Hit</a>
+//                     </div>
+//                     <div class="py-2">
+//                         <a class="btn btn-danger px-5 py-1">Double</a>
+//                     </div>
+//                 </div> <!-- end actionsDiv -->
+//             </div><!-- end actionsAndBetsDiv-->
+//         </div>
+//     </div>
