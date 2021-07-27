@@ -523,10 +523,26 @@ console.log(table1.resultsLog);
 
 
 const gameList = ['Blackjack'];
+const config = {
+    gameDiv : document.getElementById('gameDiv'),
+}
 
 
 // UI
 class View {
+
+
+    static display_none(ele) {
+        ele.classList.add("d-none");
+        ele.classList.remove("d-block");
+    }
+
+    static display_block(ele) {
+        ele.classList.add("d-block");
+        ele.classList.remove("d-none");
+    }
+
+
     // option tag  
     // choose game type
     static createOptionTagForChoiceGame(gameList) {
@@ -562,15 +578,41 @@ class View {
         let btn = `<a href="" class="btn ${btnColor}">${btnName}</a>`
 
         div.innerHTML += btn;
-        div.innerHTML += btn
         return div;
     }
 
 
+
+    static initialScreen(gameList, btnName, btnColor) {
+        let titleAndTextArea = 
+        `
+            <p class="text-white text-center"> Welcome to Card Game! </p>
+            <div class="name-field">
+                <input type="text" class="col-12" placeholder="name">
+            </div>
+        `
+
+        let container = document.createElement('div');
+        container.id = 'initial-screen';
+        container.innerHTML = titleAndTextArea;
+
+        let option = this.createOptionTagForChoiceGame(gameList);
+        let btn = this.createButton(btnName, btnColor);
+
+        container.appendChild(option);
+        container.appendChild(btn);
+
+        config.gameDiv.appendChild(container);
+    }
 }
 
 
 // event lisnner
 class Controller {
 
+    
+
 }
+
+
+View.initialScreen(gameList, 'StartGame', 'btn-success');
