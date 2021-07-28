@@ -564,7 +564,7 @@ class View {
             selectTag.innerHTML += option;
         }
         
-        chooseGameContainer.appendChild(selectTag);
+        chooseGameContainer.append(selectTag);
         return chooseGameContainer;
     }
 
@@ -599,10 +599,9 @@ class View {
         let option = View.optionTagForChoice(gameList);
         let btn = View.createButton(btnName, btnColor);
 
-        container.appendChild(option);
-        container.appendChild(btn);
+        container.append(option, btn);
 
-        config.gameDiv.appendChild(container);
+        config.gameDiv.append(container);
     }
 
     static createCard(suit, rank) {
@@ -635,10 +634,55 @@ class View {
 
         rankFrame.innerHTML = `<p>${rank}</p>`;
 
-        card.appendChild(imgFrame);
-        card.appendChild(rankFrame);
+        card.append(imgFrame, rankFrame);
 
         return card;
+    }
+
+    static playerDiv(playerName, action, bet, chip, iscurrent) {
+        let playerDiv = document.createElement('div');
+        playerDiv.id = iscurrent ? 'curPlayer' : 'nonCurPlayer';
+        playerDiv.classList.add('flex-column');
+
+        let userNameTag = document.create
+        // <div id="nonCurPlayer2Div" class="flex-column">
+
+        //     <p class="m-0 text-white text-center rem3">Yuki</p>
+        //     <div class="text-white d-flex m-0 p-0 justify-content-between" id='status'>
+        //         <p class="rem1 text-left">action:BUST </p>
+        //         <p class="rem1 text-left">bet:0 </p>
+        //         <p class="rem1 text-left">chip:255 </p>
+        //     </div>
+        // </div>
+    }
+
+    static playerInfoDiv(action, bet, chip) {
+        
+    }
+
+    static actionDiv() {
+        let actionsDiv = document.createElement('div');
+        actionsDiv.id = 'actionsAndBets';
+        actionsDiv.classList.add('d-flex', 'mt-3', 'justify-content-center');
+
+        let actions = 
+        `
+            <div id ="actionsDiv" class="d-flex">
+                <div class="m-2">
+                    <a class="btn btn-light">Surrender</a>
+                </div>
+                <div class="m-2">
+                    <a class="btn btn-success">Stand</a>
+                </div>
+                <div class="m-2">
+                    <a class="btn btn-warning">&emsp;Hit&emsp;</a>
+                </div>
+                <div class="m-2">
+                    <a class="btn btn-danger">Double</a>
+                </div>
+            </div>
+        `
+        return actionsDiv.append(actions);
     }
 }
 
@@ -657,7 +701,7 @@ class Controller {
 
     static createIinitailScreen(gameList, btnName, btnColor, title) {
         let windowSize = Controller.getWindowSize();
-        if (windowSize[0] < 768 || windowSize[1] < 1024) {
+        if (windowSize[0] < 1024 || windowSize[1] < 1366) {
             alert('Do not support a window size \nPlease resize a window')
         }
 
@@ -668,7 +712,7 @@ class Controller {
 
 }
 
-config.gameDiv.append(View.createCard('H',10));
+// config.gameDiv.append(View.createCard('H','K'));
 // Controller.createIinitailScreen(gameList, 'StartGame', 'btn-success', 'Welcome to Card Game!');
 
 
