@@ -651,12 +651,7 @@ class View {
         playerDiv.id = iscurrent ? `curPlayer${position}` : `nonCurPlayer${position}`;
         playerDiv.classList.add('flex-column');
 
-        playerDiv.append(View.userNameTag(playerName));
-        playerDiv.append(View.playerInfoDiv(infoList));
-        playerDiv.append(View.createCardDiv(Card));
-
         return playerDiv;
-
     }
 
     static userNameTag(playerName) {

@@ -9,3 +9,13 @@
 .vh-100 {
     height:100vh;
 }
+.btn-bet, .btn-action{
+    border-radius:100%;
+    height: 4rem;
+    width: 4rem;
+    vertical-align: middle;
+}
+
+input {
+    width: 4rem;
+}
