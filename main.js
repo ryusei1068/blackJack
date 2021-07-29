@@ -300,7 +300,6 @@ class Table {
 
         this.turnCounter = 0;
         
-        // round counter
         this.roundCounter = 1;
     }
     /*
@@ -604,7 +603,9 @@ class View {
         config.gameDiv.append(container);
     }
 
-    static createCard(suit, rank) {
+
+    // Card Object card.suit card.rank
+    static createCardDiv(Card) {
         // <div class="bg-white border mx-2">
         //     <div class="text-center">
         //         <img src="/img/dashboard/lessons/projects/diamond.png" alt="" width="50" height="50">
@@ -627,37 +628,60 @@ class View {
         let imgFrame = document.createElement('div');
         imgFrame.classList.add('text-center');
 
-        imgFrame.innerHTML = `<img src="${suitImg[suit]}" alt="" width="50" height="50">`
+        imgFrame.innerHTML = `<img src="${suitImg[Card.suit]}" alt="" width="50" height="50">`
 
         let rankFrame = document.createElement('div')
         rankFrame.classList.add('text-center');
 
-        rankFrame.innerHTML = `<p>${rank}</p>`;
+        rankFrame.innerHTML = `<p>${Card.rank}</p>`;
 
         card.append(imgFrame, rankFrame);
 
         return card;
     }
 
-    static playerDiv(playerName, action, bet, chip, iscurrent) {
+    static playerDiv(playerName, infoList, iscurrent, position, Card) {
+        // <div id="nonCurPlayer2Div" class="flex-column"></div>
+
         let playerDiv = document.createElement('div');
-        playerDiv.id = iscurrent ? 'curPlayer' : 'nonCurPlayer';
+        playerDiv.id = iscurrent ? `curPlayer${position}` : `nonCurPlayer${position}`;
         playerDiv.classList.add('flex-column');
 
-        let userNameTag = document.create
-        // <div id="nonCurPlayer2Div" class="flex-column">
+        playerDiv.append(View.userNameTag(playerName));
+        playerDiv.append(View.playerInfoDiv(infoList));
 
-        //     <p class="m-0 text-white text-center rem3">Yuki</p>
-        //     <div class="text-white d-flex m-0 p-0 justify-content-between" id='status'>
+        
+    }
+
+    static userNameTag(playerName) {
+        let userNameTag = document.createElement('p');
+        userNameTag.classList.add('text-white', 'text-center', 'rem3');
+        userNameTag.innerText = playerName;
+
+        return userNameTag;
+    }
+
+    // info = ['action', 'bet', 'chip'] -> playerの場合
+    // info = ['action'] -> houseの場合
+    static playerInfoDiv(infoList) {
+        //     <div class="text-white d-flex m-0 p-0 justify-content-between">
         //         <p class="rem1 text-left">action:BUST </p>
         //         <p class="rem1 text-left">bet:0 </p>
         //         <p class="rem1 text-left">chip:255 </p>
         //     </div>
-        // </div>
-    }
 
-    static playerInfoDiv(action, bet, chip) {
-        
+        let playerInfoTag = document.createElement('div');
+        playerInfoTag.classList.add('text-white', 'd-flext', 'justify-content-between');
+
+        for (let info of infoList) {
+            let p = document.createElement('p');
+            p.classList.add('rem1', 'text-left');
+            p.innerText = info;
+
+            playerInfoTag.append(p);
+        }
+
+        return playerInfoTag;
     }
 
     static actionDiv() {
