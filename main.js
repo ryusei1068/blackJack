@@ -501,17 +501,17 @@ class Table {
 }
 
 
-let table1 = new Table('blackjack');
-while(table1.gamePhase != 'roundOver') {
-    table1.haveTurn();
+// let table1 = new Table('blackjack');
+// while(table1.gamePhase != 'roundOver') {
+//     table1.haveTurn();
 
-    if (table1.gamePhase === 'acting') {
-        table1.blackjackEvaluateAndGetRoundResults();
-        table1.blackjackClearPlayerHandsAndBets();
-        table1.blackjackAssignPlayerHands();
-    }
-}
-console.log(table1.resultsLog);
+//     if (table1.gamePhase === 'acting') {
+//         table1.blackjackEvaluateAndGetRoundResults();
+//         table1.blackjackClearPlayerHandsAndBets();
+//         table1.blackjackAssignPlayerHands();
+//     }
+// }
+// console.log(table1.resultsLog);
 
 /**
  * MVC
@@ -577,7 +577,7 @@ class View {
         let div = document.createElement('div');
         div.classList.add('mt-2', 'd-flex', 'justify-content-center');
 
-        let btn = `<a id='start-game' class="btn ${btnColor}">${btnName}</a>`
+        let btn = `<button id='start-game' class="btn ${btnColor}">${btnName}</button>`
 
         div.innerHTML += btn;
         return div;
@@ -589,9 +589,9 @@ class View {
         let titleAndTextArea = 
         `
             <p class="text-white text-center">${tittle}</p>
-            <div class="name-field">
-                <input type="text" class="col-12" placeholder="name">
-            </div>
+            <form name="form1" action="">
+                <input type="text" name="userName" class="col-12" placeholder="name" value="">
+            </form>
         `
 
         let container = document.createElement('div');
@@ -662,8 +662,8 @@ class View {
         return userNameTag;
     }
 
-    // info = ['action', 'bet', 'chip'] -> playerの場合
-    // info = ['action'] -> houseの場合
+    // info = ['action', 'bet', 'chip'] -> case of player
+    // info = ['action'] -> case of house
     static playerInfoDiv(infoList) {
         //     <div class="text-white d-flex m-0 p-0 justify-content-between">
         //         <p class="rem1 text-left">action:BUST </p>
@@ -701,16 +701,16 @@ class View {
         `
             <div id ="actionAndBet" class="d-flex">
                 <div class="m-2">
-                    <a class="btn btn-light">Surrender</a>
+                    <button class="btn btn-light">Surrender</button>
                 </div>
                 <div class="m-2">
-                    <a class="btn btn-success">Stand</a>
+                    <button class="btn btn-success">Stand</button>
                 </div>
                 <div class="m-2">
-                    <a class="btn btn-warning">&emsp;Hit&emsp;</a>
+                    <button class="btn btn-warning">&emsp;Hit&emsp;</button>
                 </div>
                 <div class="m-2">
-                    <a class="btn btn-danger">Double</a>
+                    <button class="btn btn-danger">Double</button>
                 </div>
             </div>
         `
@@ -724,6 +724,9 @@ class View {
                     <button type='button' class="btn btn-primary">5</button>
                     <input class="input_number mt-2" type="number" style="text-align: right;" min="0" value="0">
                 </div>
+                ・
+                ・
+                ・
          *  </div>
          */ 
         let actionAndBet = View.actionAndBetDiv();
@@ -731,7 +734,7 @@ class View {
         for (let amount of amounts) {
             let wagerContainer = `
                 <div class="m-2 d-flex flex-column align-items-center wager">
-                    <button type='button' class="btn btn-primary">${amount}</button>
+                    <button type='button' class="btn btn-primary wager-btn">${amount}</button>
                     <input class="input_number mt-2" type="number" style="text-align: right;" min="0" value="0">
                 </div>`
             actionAndBet.append(wagerContainer);
@@ -745,7 +748,7 @@ class View {
                 <div class="text-white" id="total-wager">
                     <font size='6'>Total : 0</font>
                 </div>
-                <button type='button' class="btn btn-light bet mt-2">
+                <button type='button' class="btn btn-light bet-btn mt-2">
                     <font size='5'>bet</font>
                 </button>
             </div>
@@ -764,16 +767,21 @@ class Controller {
     }
 
     static gameStart() {
-
+        document.getElementById('start-game').addEventListener('click', function() {
+            let userName = document.querySelector('#initial-screen form input[name="userName"]').value;
+            
+        })
     }
 
     static createIinitailScreen(gameList, btnName, btnColor, title) {
         let windowSize = Controller.getWindowSize();
-        if (windowSize[0] < 1024 || windowSize[1] < 1366) {
-            alert('Do not support a window size \nPlease resize a window')
-        }
-
-        View.initialScreen(gameList, btnName, btnColor, title);
+        // if (windowSize[0] < 1024 && windowSize[1] < 1366) {
+        //     alert('Do not support a window size \nPlease resize a window');
+        // }
+        // else {
+            View.initialScreen(gameList, btnName, btnColor, title);
+            Controller.gameStart();
+        // }
     }
 
 
@@ -781,4 +789,4 @@ class Controller {
 }
 
 // config.gameDiv.append(View.createCard('H','K'));
-// Controller.createIinitailScreen(gameList, 'StartGame', 'btn-success', 'Welcome to Card Game!');
+Controller.createIinitailScreen(gameList, 'StartGame', 'btn-success', 'Welcome to Card Game!');
