@@ -685,14 +685,21 @@ class View {
         return playerInfoTag;
     }
 
-    static chooseAction() {
-        let actionsDiv = document.createElement('div');
-        actionsDiv.id = 'actionsAndBets';
-        actionsDiv.classList.add('d-flex', 'mt-3', 'justify-content-center');
+    static actionAndBetDiv() {
+        let actionAndBet = document.createElement('div');
+        actionAndBet.id = 'actionsAndBets';
+        actionAndBet.classList.add('d-flex', 'mt-3', 'justify-content-center');
+
+        return actionAndBet;
+    }
+
+    static actionBtn() {
+        let actionAndBet = View.actionAndBetDiv();
+        actionAndBet.innerHTML = '';
 
         let actions = 
         `
-            <div id ="actionsDiv" class="d-flex">
+            <div id ="actionAndBet" class="d-flex">
                 <div class="m-2">
                     <a class="btn btn-light">Surrender</a>
                 </div>
@@ -707,7 +714,43 @@ class View {
                 </div>
             </div>
         `
-        return actionsDiv.append(actions);
+        return actionAndBet.append(actions);
+    }
+
+    static wagerBtn(amounts) {
+        /**
+         *  <div class="d-flex mt-3 justify-content-center" id='actionsAndbets'>
+                <div class="m-2 d-flex flex-column align-items-center bet">
+                    <button type='button' class="btn btn-primary">5</button>
+                    <input class="input_number mt-2" type="number" style="text-align: right;" min="0" value="0">
+                </div>
+         *  </div>
+         */ 
+        let actionAndBet = View.actionAndBetDiv();
+        actionAndBet.innerHTML = '';
+        for (let amount of amounts) {
+            let wagerContainer = `
+                <div class="m-2 d-flex flex-column align-items-center wager">
+                    <button type='button' class="btn btn-primary">${amount}</button>
+                    <input class="input_number mt-2" type="number" style="text-align: right;" min="0" value="0">
+                </div>`
+            actionAndBet.append(wagerContainer);
+        }
+        return actionAndBet;
+    }
+
+    static betBtn() {
+        let bet = `
+            <div class="d-flex flex-column align-items-center mt-2">
+                <div class="text-white" id="total-wager">
+                    <font size='6'>Total : 0</font>
+                </div>
+                <button type='button' class="btn btn-light bet mt-2">
+                    <font size='5'>bet</font>
+                </button>
+            </div>
+        `
+        return bet;
     }
 }
 
