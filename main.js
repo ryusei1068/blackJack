@@ -400,15 +400,11 @@ class Table {
         return null : デッキから2枚のカードを手札に加えることで、全プレイヤーの状態を更新。
         NOTE: プレイヤーのタイプが「ハウス」の場合は、別の処理を行う必要。
     */
-    blackjackAssignPlayerHands() {
-        this.deck.resetDeck();
-        this.deck.shuffle();
-        for (let player of this.players) {
-            // 各プレイヤー2枚ずつ
-            player.hand = [this.deck.drawOne(), this.deck.drawOne()];
+    blackjackAssignPlayerHands(player) {
+        if (player != undefined) {
+            if (player.gameStatus === "betting") player.hand = [this.deck.drawOne(), this.deck.drawOne()];
         }
-
-        this.house.hand = [this.deck.drawOne(), this.deck.drawOne()];
+        if (this.house.gameStatus === "betting") this.house.hand = [this.deck.drawOne(), this.deck.drawOne()];
         while (this.house.getHandScore() < 17) {
             this.house.hand.push(this.deck.drawOne());
         }
@@ -447,11 +443,13 @@ class Table {
             this.gamePhase = 'roundOver';
         }
         else if (this.allPlayerActionsResolved()) {
+            this.deck.resetDeck();
+            this.deck.shuffle();
             this.gamePhase = 'acting';
         }
         else {
-            this.blackjackAssignPlayerHands();
             let player = this.getTurnPlayer();
+            this.blackjackAssignPlayerHands(player);
             this.evaluateMove(player);
         }
         this.turnCounter++;
@@ -500,19 +498,6 @@ class Table {
     }
 }
 
-
-// let table1 = new Table('blackjack');
-// while(table1.gamePhase != 'roundOver') {
-//     table1.haveTurn();
-
-//     if (table1.gamePhase === 'acting') {
-//         table1.blackjackEvaluateAndGetRoundResults();
-//         table1.blackjackClearPlayerHandsAndBets();
-//         table1.blackjackAssignPlayerHands();
-//     }
-// }
-// console.log(table1.resultsLog);
-
 /**
  * MVC
  * Model -> game logic
@@ -560,6 +545,7 @@ class View {
 
         let selectTag = document.createElement("select");
         selectTag.classList.add('col-12');
+        selectTag.name = 'choice';
 
         for (let game of gameList) {
             let option = `<option value="${game}">${game}</option>`
@@ -742,18 +728,18 @@ class View {
         return actionAndBet;
     }
 
-    static betBtn() {
-        let bet = `
+    static dealBtn() {
+        let deal = `
             <div class="d-flex flex-column align-items-center mt-2">
                 <div class="text-white" id="total-wager">
                     <font size='6'>Total : 0</font>
                 </div>
                 <button type='button' class="btn btn-light bet-btn mt-2">
-                    <font size='5'>bet</font>
+                    <font size='5'>deal</font>
                 </button>
             </div>
         `
-        return bet;
+        return deal;
     }
 }
 
@@ -769,7 +755,9 @@ class Controller {
     static gameStart() {
         document.getElementById('start-game').addEventListener('click', function() {
             let userName = document.querySelector('#initial-screen form input[name="userName"]').value;
+            let choiceGame = document.querySelector('#initial-screen .choose-game-type select[name="choice"]').value;
             
+
         })
     }
 
@@ -788,5 +776,17 @@ class Controller {
 
 }
 
-// config.gameDiv.append(View.createCard('H','K'));
-Controller.createIinitailScreen(gameList, 'StartGame', 'btn-success', 'Welcome to Card Game!');
+// // config.gameDiv.append(View.createCard('H','K'));
+// Controller.createIinitailScreen(gameList, 'StartGame', 'btn-success', 'Welcome to Card Game!');
+
+
+// let table1 = new Table("blackjack");
+// while(table1.gamePhase != 'roundOver') {
+//     table1.haveTurn();
+
+//     if (table1.gamePhase === 'acting') {
+//         table1.blackjackEvaluateAndGetRoundResults();
+//         table1.blackjackClearPlayerHandsAndBets();
+//     }
+// }
+// console.log(table1.resultsLog);
