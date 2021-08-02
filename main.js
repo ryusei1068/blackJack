@@ -195,6 +195,11 @@ class Player {
 
     }
 
+
+    static getRandomInteger(max, min) {
+        return Math.floor(Math.random() * (max - min) + min);
+    }
+
 /*
     Number userData : モデル外から渡されるパラメータ。nullになることもあります。
     return GameDecision : 状態を考慮した上で、プレイヤーが行った決定。
@@ -205,19 +210,19 @@ class Player {
         if (userData === undefined) {
             let option = ['surrender', 'stand', 'hit', 'double'];
             if (this.gameStatus === 'betting') {
-                let index = Math.floor(Math.random() * option.length);
+                let index = Player.getRandomInteger(option.length, 0);
                 this.gameStatus = option[index];
                 // doubleが選択された場合、ベット金額を2倍にした額が所持しているチップを超えていないか確認
                 if (this.gameStatus === 'double' && this.chips >= this.bet * 2) {
                     this.bet *= 2;
                 }
                 else {
-                    let index = Math.floor(Math.random() * (option.length - 1));
+                    let index = Player.getRandomInteger(option.length -1, 0);
                     this.gameStatus = option[index];
                 }
             }
             else if (this.gameStatus === 'stand') {
-                let index = Math.floor(Math.random() * (2 - 1) + 1);
+                let index = Player.getRandomInteger(2, 1);
                 this.gameStatus = option[index];
             }
         }
@@ -273,7 +278,7 @@ class Table {
         Array betDenominations : プレイヤーが選択できるベットの単位。デフォルトは[5,20,50,100]。
         return Table : ゲームフェーズ、デッキ、プレイヤーが初期化されたテーブル
     */
-    constructor(gameType, betDenominations = [5,20,50,100], userName) {
+    constructor(gameType, userName, betDenominations = [5,20,50,100]) {
         // ゲームタイプを表します。
         this.gameType = gameType;
         
@@ -289,12 +294,15 @@ class Table {
         // Player 初期化
 
         // AI 
-        for (let i = 0; i < 3; i++) {
-            this.players.push(new Player(`AI${i+1}`, 'ai', this.gameType));
+        for (let i = 1; i <= 2; i++) {
+            let aiPlayer = new Player(`AI${i}`, 'ai', this.gameType);
+            aiPlayer.hand = [new Card('?',0), new Card('?',0)];
+            this.players.push(aiPlayer);
         }
-
-        // User 
-        // this.players.push(new Player(userName, ''))
+        // User
+        let user = new Player(userName, 'user', this.gameType);
+        user.hand = [new Card('?',0), new Card('?',0)];
+        this.players.push(user);
 
         this.house = new Player('house', 'house', this.gameType);
 
@@ -331,7 +339,8 @@ class Table {
             let score = player.getHandScore();
             if (score > 21) {
                 player.gameStatus = 'bust';
-                player.bet = -1 * player.bet;
+                // player.bet = -1 * player.bet;
+                player.winAmount = -1 * player.bet;
             }
         }
         else if (decision.action === 'double' || decision.action === 'stand') {
@@ -339,7 +348,8 @@ class Table {
         }
         else if (decision.action === 'surrender') {
             player.gameStatus = decision.action;
-            player.bet = -1 * player.bet / 2;
+            // player.bet = -1 * player.bet / 2;
+            player.winAmount = -1 * player.bet / 2;
         }
     }
 
@@ -356,8 +366,8 @@ class Table {
         let hasHouseBlackJack = this.house.getHandScore() === 21 && this.house.hand.length === 2;
         for (let player of this.players) {
             let hasPlayerBlackJack = player.getHandScore() === 21 && player.hand.length === 2;
-            if (player.gameStatus === 'sullender' || player.gameStatus === 'bust') {
-                player.winAmount = player.bet;
+            if (player.gameStatus === 'surrender' || player.gameStatus === 'bust') {
+                ;
             }
             else if (hasHouseBlackJack) {
                 if (!hasPlayerBlackJack) {
@@ -367,6 +377,9 @@ class Table {
                 else {
                     player.winAmount = 0;
                 }
+            }
+            else if (this.house.getHandScore() === player.getHandScore()) {
+                player.winAmount = 0;
             }
             else if (this.house.gameStatus === 'bust' || player.getHandScore() > houseHandScore) {
                 if (hasPlayerBlackJack) {
@@ -380,10 +393,10 @@ class Table {
                 player.winAmount = -1 * player.bet;
             }
             
-            playerResult += `name : ${player.name}, action : ${player.gameStatus}, winAmount : ${player.winAmount}, chips : ${player.chips}, bet ${player.bet}, `;
-            // 各プレイヤーの結果ログ　userName, final Action, winAmount
             // chipの更新
             player.chips += player.winAmount;
+            playerResult += `name : ${player.name}, action : ${player.gameStatus}, winAmount : ${player.winAmount}, chips : ${player.chips}, bet ${player.bet}, `;
+            // 各プレイヤーの結果ログ　userName, final Action, winAmount
         }
         this.resultsLog.push(playerResult);
         this.gamePhase = 'betting';
@@ -413,12 +426,12 @@ class Table {
     blackjackClearPlayerHandsAndBets() {
         // broken -> chip消失したユーザー　ゲームへ参加できない
         for (let player of this.players) {
-            player.hand = [];
+            player.hand = [new Card('?',0), new Card('?',0)];
             player.gameStatus = player.chips > 0 ? 'betting' : 'broken';
             player.bet = 0;
         }
 
-        this.house.hand = [];
+        this.house.hand = [new Card('?',0), new Card('?',0)];
         this.house.gameStatus = 'betting';
     }
     
@@ -441,12 +454,16 @@ class Table {
         else if (this.allPlayerActionsResolved()) {
             this.deck.resetDeck();
             this.deck.shuffle();
-            this.gamePhase = 'acting';
+            this.gamePhase = 'evaluation';
         }
         else {
             let player = this.getTurnPlayer();
             this.blackjackAssignPlayerHands(player);
             this.evaluateMove(player);
+
+            if (this.onLastPlayer()) {
+                this.gamePhase === 'acting';
+            }
         }
         this.turnCounter++;
     }
@@ -580,7 +597,7 @@ class View {
 
 
     // Card Object card.suit card.rank
-    static createCardDiv(Card) {
+    static createCardDiv(hand) {
         // <div class="bg-white border mx-2">
         //     <div class="text-center">
         //         <img src="/img/dashboard/lessons/projects/diamond.png" alt="" width="50" height="50">
@@ -590,29 +607,34 @@ class View {
         //     </div>
         // </div>
         const suitImg = {
-            "H":"https://recursionist.io/img/dashboard/lessons/projects/heart.png",
-            "D":"https://recursionist.io/img/dashboard/lessons/projects/diamond.png",
-            "C":"https://recursionist.io/img/dashboard/lessons/projects/clover.png",
-            "S":"https://recursionist.io/img/dashboard/lessons/projects/spade.png",
-            "B":"https://cdn.pixabay.com/photo/2018/09/12/09/04/wall-3671612_640.jpg"
+            "H" : "https://recursionist.io/img/dashboard/lessons/projects/heart.png",
+            "D" : "https://recursionist.io/img/dashboard/lessons/projects/diamond.png",
+            "C" : "https://recursionist.io/img/dashboard/lessons/projects/clover.png",
+            "S" : "https://recursionist.io/img/dashboard/lessons/projects/spade.png",
+            "?" : "https://recursionist.io/img/questionMark.png"
         }
 
-        let card = document.createElement('div');
-        card.classList.add('bg-white', 'border', 'mx-2');
-
-        let imgFrame = document.createElement('div');
-        imgFrame.classList.add('text-center');
-
-        imgFrame.innerHTML = `<img src="${suitImg[Card.suit]}" alt="" width="50" height="50">`
-
-        let rankFrame = document.createElement('div')
-        rankFrame.classList.add('text-center');
-
-        rankFrame.innerHTML = `<p>${Card.rank}</p>`;
-
-        card.append(imgFrame, rankFrame);
-
-        return card;
+        let cardContainer = document.createElement('div');
+        cardContainer.classList.add('d-flex', 'justify-content-center');
+        for (let Card of hand) {
+            let card = document.createElement('div');
+            card.classList.add('bg-white', 'border', 'mx-2');
+    
+            let imgFrame = document.createElement('div');
+            imgFrame.classList.add('text-center');
+    
+            imgFrame.innerHTML = `<img src="${suitImg[Card.suit]}" alt="" width="50" height="50">`
+    
+            let rankFrame = document.createElement('div')
+            rankFrame.classList.add('text-center');
+    
+            let rank = Card.rank === 0 ? '?' : Card.rank;
+            rankFrame.innerHTML = `<p>${rank}</p>`;
+    
+            card.append(imgFrame, rankFrame);
+            cardContainer.append(card);
+        }
+        return cardContainer;
     }
 
 
@@ -621,7 +643,6 @@ class View {
 
         let playerDiv = document.createElement('div');
         playerDiv.id = `player${position}`;
-        playerDiv.classList.add('flex-column');
 
         return playerDiv;
     }
@@ -727,6 +748,29 @@ class View {
         `
         return deal;
     }
+
+    static renderTable(table) {
+        if (table.gamePhase === 'betting') View.playerRow(table);
+        if (table.getTurnPlayer().type === 'user') {
+            if (table.gamePhase === 'betting') {
+
+            }
+        }
+    }
+
+    static playerRow(table) {
+        let players = table.players;
+
+        let playersDiv = config.players;
+        for (let i = 1; i <= players.length; i++) {
+            let row = View.playerDiv(i);
+            let card = View.createCardDiv(players[i-1].hand);
+            let userTag = View.userNameTag(players[i-1].name);
+
+            row.append(userTag, card);
+            playersDiv.append(row);
+        }
+    }
 }
 
 
@@ -741,9 +785,18 @@ class Controller {
     static gameStart() {
         document.getElementById('start-game').addEventListener('click', function() {
             let userName = document.querySelector('#initial-screen form input[name="userName"]').value;
+            if (userName.length === 0) {
+                alert("Please enter User Name");
+                return ;
+            }
             let choiceGame = document.querySelector('#initial-screen .choose-game-type select[name="choice"]').value;
-            
 
+            // 初期画面削除
+            document.getElementById('initial-screen').remove();
+
+            let table = new Table(choiceGame, userName);
+            View.display_block(config.gameStart);
+            View.renderTable(table);
         })
     }
 
@@ -758,25 +811,19 @@ class Controller {
         // }
     }
 
-    static renderTable(table) {
-
-    }
-
-
-
 }
 
 // config.gameDiv.append(View.createCard('H','K'));
 Controller.createIinitailScreen(gameList);
 
 
-// let table1 = new Table("blackjack");
-// while(table1.gamePhase != 'roundOver') {
-//     table1.haveTurn();
+let table1 = new Table("blackjack");
+while(table1.gamePhase != 'roundOver') {
+    table1.haveTurn();
 
-//     if (table1.gamePhase === 'acting') {
-//         table1.blackjackEvaluateAndGetRoundResults();
-//         table1.blackjackClearPlayerHandsAndBets();
-//     }
-// }
-// console.log(table1.resultsLog);
+    if (table1.gamePhase === 'evaluation') {
+        table1.blackjackEvaluateAndGetRoundResults();
+        table1.blackjackClearPlayerHandsAndBets();
+    }
+}
+console.log(table1.resultsLog);
