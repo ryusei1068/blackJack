@@ -273,7 +273,7 @@ class Table {
         Array betDenominations : プレイヤーが選択できるベットの単位。デフォルトは[5,20,50,100]。
         return Table : ゲームフェーズ、デッキ、プレイヤーが初期化されたテーブル
     */
-    constructor(gameType, betDenominations = [5,20,50,100]) {
+    constructor(gameType, betDenominations = [5,20,50,100], userName) {
         // ゲームタイプを表します。
         this.gameType = gameType;
         
@@ -287,9 +287,15 @@ class Table {
         // 今回はとりあえず3人のAIプレイヤーとハウス、「betting」フェースの始まりにコミット。
         this.players = [];
         // Player 初期化
+
+        // AI 
         for (let i = 0; i < 3; i++) {
             this.players.push(new Player(`AI${i+1}`, 'ai', this.gameType));
         }
+
+        // User 
+        // this.players.push(new Player(userName, ''))
+
         this.house = new Player('house', 'house', this.gameType);
 
         // {'betting', 'acting', 'roundOver', gameOver'} 
@@ -325,15 +331,15 @@ class Table {
             let score = player.getHandScore();
             if (score > 21) {
                 player.gameStatus = 'bust';
-                player.winAmount = -1 * player.bet;
+                player.bet = -1 * player.bet;
             }
         }
         else if (decision.action === 'double' || decision.action === 'stand') {
             player.gameStatus = decision.action;
         }
         else if (decision.action === 'surrender') {
-            player.gameStatus = 'surrender';
-            player.winAmount = -1 * player.bet / 2;
+            player.gameStatus = decision.action;
+            player.bet = -1 * player.bet / 2;
         }
     }
 
@@ -345,17 +351,17 @@ class Table {
         let houseHandScore = this.house.getHandScore();
         this.resultsLog.push(`Round ${this.roundCounter}`)
         // ハウスがブラックジャックの場合
+        let playerResult = "";
+
+        let hasHouseBlackJack = this.house.getHandScore() === 21 && this.house.hand.length === 2;
         for (let player of this.players) {
             let hasPlayerBlackJack = player.getHandScore() === 21 && player.hand.length === 2;
-            let hasHouseBlackJack = this.house.getHandScore() === 21 && this.house.hand.length === 2;
-            if (hasHouseBlackJack) {
+            if (player.gameStatus === 'sullender' || player.gameStatus === 'bust') {
+                player.winAmount = player.bet;
+            }
+            else if (hasHouseBlackJack) {
                 if (!hasPlayerBlackJack) {
-                    if (player.gameStatus === 'double') {
-                        player.winAmount = -1 * player.bet * 2;
-                    }
-                    else if (player.gameStatus === 'stand') {
-                        player.winAmount = -1 * player.bet;
-                    }
+                    player.winAmount = -1 * player.bet;
                 }
                 // playerがブラックジャックの場合　引き分け
                 else {
@@ -366,30 +372,20 @@ class Table {
                 if (hasPlayerBlackJack) {
                     player.winAmount = player.bet * 1.5;
                 }
-                else if (player.gameStatus === 'double') {
-                    player.winAmount = player.bet * 2;
-                }
-                else if (player.gameStatus === 'stand') {
+                else  {
                     player.winAmount = player.bet;
                 }
             }
             else if (this.house.gameStatus != 'bust' && houseHandScore > player.getHandScore()) {
-                if (player.gameStatus === 'double') {
-                    player.winAmount = -1 * player.bet * 2;
-                }
-                else if (player.gameStatus === 'stand') {
-                    player.winAmount = -1 * player.bet;
-                }
+                player.winAmount = -1 * player.bet;
             }
             
-            
-            let playerInfo = `name : ${player.name}, action : ${player.gameStatus}, winAmount : ${player.winAmount}, chips : ${player.chips}, bet ${player.bet}`;
+            playerResult += `name : ${player.name}, action : ${player.gameStatus}, winAmount : ${player.winAmount}, chips : ${player.chips}, bet ${player.bet}, `;
             // 各プレイヤーの結果ログ　userName, final Action, winAmount
-            this.resultsLog.push(playerInfo);
-
             // chipの更新
             player.chips += player.winAmount;
         }
+        this.resultsLog.push(playerResult);
         this.gamePhase = 'betting';
 
         // Round 更新
@@ -556,25 +552,10 @@ class View {
         return chooseGameContainer;
     }
 
-    static createButton(btnName, btnColor) {
-        // <div class="mt-2 d-flex justify-content-center">
-        //     <a href="" class="btn btn-success">Start Game</a>
-        // </div>
-        let div = document.createElement('div');
-        div.classList.add('mt-2', 'd-flex', 'justify-content-center');
-
-        let btn = `<button id='start-game' class="btn ${btnColor}">${btnName}</button>`
-
-        div.innerHTML += btn;
-        return div;
-    }
-
-
-
-    static initialScreen(gameList, btnName, btnColor, tittle) {
+    static initialScreen(gameList) {
         let titleAndTextArea = 
         `
-            <p class="text-white text-center">${tittle}</p>
+            <p class="text-white text-center">Welcome to Card Game!</p>
             <form name="form1" action="">
                 <input type="text" name="userName" class="col-12" placeholder="name" value="">
             </form>
@@ -585,9 +566,14 @@ class View {
         container.innerHTML = titleAndTextArea;
 
         let option = View.optionTagForChoice(gameList);
-        let btn = View.createButton(btnName, btnColor);
 
-        container.append(option, btn);
+        // start button
+        let btndiv = document.createElement('div');
+        btndiv.classList.add('mt-2', 'd-flex', 'justify-content-center');
+        let btn = `<button id='start-game' class="btn btn-success">Start Game</button>`
+        btndiv.innerHTML += btn;
+
+        container.append(option, btndiv);
 
         return config.gameDiv.append(container);
     }
@@ -630,11 +616,11 @@ class View {
     }
 
 
-    static playerDiv(playerName, infoList, iscurrent, position, Card) {
-        // <div id="nonCurPlayer2Div" class="flex-column"></div>
+    static playerDiv(position) {
+        // <div id="player1" class="flex-column"></div>
 
         let playerDiv = document.createElement('div');
-        playerDiv.id = iscurrent ? `curPlayer${position}` : `nonCurPlayer${position}`;
+        playerDiv.id = `player${position}`;
         playerDiv.classList.add('flex-column');
 
         return playerDiv;
@@ -761,23 +747,27 @@ class Controller {
         })
     }
 
-    static createIinitailScreen(gameList, btnName, btnColor, title) {
+    static createIinitailScreen(gameList) {
         let windowSize = Controller.getWindowSize();
         // if (windowSize[0] < 1024 && windowSize[1] < 1366) {
         //     alert('Do not support a window size \nPlease resize a window');
         // }
         // else {
-            View.initialScreen(gameList, btnName, btnColor, title);
+            View.initialScreen(gameList);
             Controller.gameStart();
         // }
+    }
+
+    static renderTable(table) {
+
     }
 
 
 
 }
 
-// // config.gameDiv.append(View.createCard('H','K'));
-// Controller.createIinitailScreen(gameList, 'StartGame', 'btn-success', 'Welcome to Card Game!');
+// config.gameDiv.append(View.createCard('H','K'));
+Controller.createIinitailScreen(gameList);
 
 
 // let table1 = new Table("blackjack");
