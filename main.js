@@ -81,11 +81,11 @@ class Card {
     }
 
     /*
-        return Number : カードのランクを基準とした整数のスコア。
+        return Number : カードのランクを基準とした整数のスコア
         
-        2-10はそのまま数値を返します。
-    　  {"J", "Q", "K"}を含む、フェースカードは10を返します。
-        "A」が1なのか11なのかを判断するには手札全体の知識が必要なので、「A」はとりあえず11を返します。
+        2-10はそのまま数値を返す
+    　  {"J", "Q", "K"}を含む、フェースカードは10を返す
+        "A」が1なのか11なのかを判断するには手札全体の知識が必要、「A」はとりあえず11を返す
     */
     getRankNumber() {
         let hashMap = {
@@ -109,7 +109,6 @@ class Deck {
         this.gameType = gameType
         // カードの配列
         this.cards = gameType === "blackjack" ? Deck.generateDeck() : [];
-        // ゲームタイプによって、カードを初期化してください。
 
     }
     
@@ -128,7 +127,7 @@ class Deck {
     }
 /*
     return null : このメソッドは、デッキの状態を更新  | update condtion of Deck
-    カードがランダムな順番になるようにデッキをシャッフル。
+    カードがランダムな順番になるようにデッキをシャッフル
 */
     shuffle(){
         let deckSize = this.cards.length;
@@ -150,8 +149,7 @@ class Deck {
     }
     
 /*
-    return Card : ポップされたカードを返します。
-    カード配列から先頭のカード要素をポップして返します。
+    return Card : ポップされたカードを返す
 */
     drawOne(){
         return this.cards.pop();
@@ -162,9 +160,9 @@ class Deck {
 class Player {
     /*
         String name : プレイヤーの名前
-        String type : プレイヤータイプ。{'ai', 'user', 'house'}から選択。
-        String gameType : {'blackjack'}から選択。プレイヤーの初期化方法を決定するために使用されます。
-        ?Number chips : ゲーム開始に必要なチップ。デフォルトは400。
+        String type : プレイヤータイプ。{'ai', 'user', 'house'}から選択
+        String gameType : {'blackjack'}から選択。プレイヤーの初期化方法を決定するために使用
+        ?Number chips : ゲーム開始に必要なチップ　デフォルトは400
     */
     constructor(name, type, gameType, chips = 400) {
         // プレイヤーの名前
@@ -179,17 +177,17 @@ class Player {
         // プレイヤーの手札
         this.hand = [];
 
-        // プレイヤーが所持しているチップ。
+        // プレイヤーが所持しているチップ
         this.chips = chips;
 
         // 現在のラウンドでのベットしているチップ
         this.bet = 0
 
-        // 勝利金額。正の数にも負の数にもなります。
+        // 勝利金額。正の数にも負の数にも
         this.winAmount = 0 
 
-        // プレイヤーのゲームの状態やアクションを表します。
-        // ブラックジャックの場合、最初の状態は「betting」です。
+        // プレイヤーのゲームの状態やアクションを表す
+        // ブラックジャックの場合、最初の状態は「betting」
         // bust, double, stand, surrender, hit, 
         this.gameStatus = 'betting' 
 
@@ -201,10 +199,10 @@ class Player {
     }
 
 /*
-    Number userData : モデル外から渡されるパラメータ。nullになることもあります。
-    return GameDecision : 状態を考慮した上で、プレイヤーが行った決定。
+    Number userData : モデル外から渡されるパラメータ　nullになることも
+    return GameDecision : 状態を考慮した上で、プレイヤーが行った決定
 
-    このメソッドは、どのようなベットやアクションを取るべきかというプレイヤーの決定を取得します。プレイヤーのタイプ、ハンド、チップの状態を読み取り、GameDecisionを返します。パラメータにuserData使うことによって、プレイヤーが「user」の場合、このメソッドにユーザーの情報を渡すことができますし、プレイヤーが 「ai」の場合、 userDataがデフォルトとしてnullを使います。
+    このメソッドは、どのようなベットやアクションを取るべきかというプレイヤーの決定を取得 プレイヤーのタイプ、ハンド、チップの状態を読み取り、GameDecisionを返す　パラメータにuserData使うことによって、プレイヤーが「user」の場合、このメソッドにユーザーの情報を渡すことが可能、プレイヤーが 「ai」の場合、 userDataがデフォルトとしてnullを使う
 */
     promptPlayer(userData) {
         if (userData === undefined) {
@@ -237,7 +235,7 @@ class Player {
 /*
     return Number : 手札の合計
 
-    合計が21を超える場合、手札の各エースについて、合計が21以下になるまで10を引く。
+    合計が21を超える場合、手札の各エースについて、合計が21以下になるまで10を引く
 */
     getHandScore() {
         let total = 0;
@@ -258,10 +256,10 @@ class Player {
 
 class GameDecision {
 /*
-    String action : プレイヤーのアクションの選択。（ブラックジャックでは、hit、standなど。）
-    Number amount : プレイヤーがベットする数値。
+    String action : プレイヤーのアクションの選択（ブラックジャックでは、hit、standなど。）
+    Number amount : プレイヤーがベットする数値
 
-    これはPlayer.promptPlayer()は常にreturnする、標準化されたフォーマット。
+    これはPlayer.promptPlayer()は常にreturnする、標準化されたフォーマット
 */
     constructor(action, amount) {
         // アクション
@@ -274,8 +272,8 @@ class GameDecision {
 
 class Table {
     /*
-        String gameType : {"blackjack"}から選択。
-        Array betDenominations : プレイヤーが選択できるベットの単位。デフォルトは[5,20,50,100]。
+        String gameType : {"blackjack"}から選択
+        Array betDenominations : プレイヤーが選択できるベットの単位。デフォルトは[5,20,50,100]
         return Table : ゲームフェーズ、デッキ、プレイヤーが初期化されたテーブル
     */
     constructor(gameType, userName, betDenominations = [5,20,50,100]) {
@@ -289,7 +287,7 @@ class Table {
         this.deck = new Deck(this.gameType);
         
         // プレイしているゲームに応じて、プレイヤー、gamePhases、ハウスの表現が異なるかも。
-        // 今回はとりあえず3人のAIプレイヤーとハウス、「betting」フェースの始まりにコミット。
+        // 今回はとりあえず3人のAIプレイヤーとハウス、「betting」フェースの始まりにコミット
         this.players = [];
         // Player 初期化
 
@@ -305,11 +303,12 @@ class Table {
         this.players.push(user);
 
         this.house = new Player('house', 'house', this.gameType);
+        this.house.hand = [new Card('?',0), new Card('?',0)];
 
         // {'betting', 'acting', 'roundOver', gameOver'} 
         this.gamePhase = 'betting'
 
-        // これは各ラウンドの結果をログに記録するための文字列の配列。
+        // これは各ラウンドの結果をログに記録するための文字列の配列
         this.resultsLog = [];
 
         this.turnCounter = 0;
@@ -317,11 +316,11 @@ class Table {
         this.roundCounter = 1;
     }
     /*
-        Player player : テーブルは、player.promptPlayer()を使用してGameDecisionを取得し、GameDecisionとgameTypeに応じてPlayerの状態を更新。
-        return Null : このメソッドは、プレーヤの状態を更新。
+        Player player : テーブルは、player.promptPlayer()を使用してGameDecisionを取得し、GameDecisionとgameTypeに応じてPlayerの状態を更新
+        return Null : このメソッドは、プレーヤの状態を更新
 
         EX:
-        プレイヤーが「ヒット」し、手札が21以上の場合、gameStatusを「バスト」に設定し、チップからベットを subtract。
+        プレイヤーが「ヒット」し、手札が21以上の場合、gameStatusを「バスト」に設定し、チップからベットを subtract
     */
 
 
@@ -354,8 +353,8 @@ class Table {
     }
 
     /*
-        return String : 新しいターンが始まる直前の全プレイヤーの状態を表す文字列。
-        NOTE: このメソッドの出力は、各ラウンドの終了時にテーブルのresultsLogメンバを更新するために使用。
+        return String : 新しいターンが始まる直前の全プレイヤーの状態を表す文字列
+        NOTE: このメソッドの出力は、各ラウンドの終了時にテーブルのresultsLogメンバを更新するために使用
     */
     blackjackEvaluateAndGetRoundResults() {
         let houseHandScore = this.house.getHandScore();
@@ -406,8 +405,8 @@ class Table {
     }
 
     /*
-        return null : デッキから2枚のカードを手札に加えることで、全プレイヤーの状態を更新。
-        NOTE: プレイヤーのタイプが「ハウス」の場合は、別の処理を行う必要。
+        return null : デッキから2枚のカードを手札に加えることで、全プレイヤーの状態を更新
+        NOTE: プレイヤーのタイプが「ハウス」の場合は、別の処理を行う
     */
     blackjackAssignPlayerHands(player) {
         if (player != undefined) {
@@ -421,7 +420,7 @@ class Table {
     }
 
     /*
-        return null : テーブル内のすべてのプレイヤーの状態を更新し、手札を空の配列に、ベットを0に設定。
+        return null : テーブル内のすべてのプレイヤーの状態を更新し、手札を空の配列に、ベットを0に設定
     */
     blackjackClearPlayerHandsAndBets() {
         // broken -> chip消失したユーザー　ゲームへ参加できない
@@ -445,7 +444,7 @@ class Table {
     }
 
     /*
-        return Null : このメソッドはテーブルの状態を更新する only。
+        return Null : このメソッドはテーブルの状態を更新する only
     */
     haveTurn(userData) {
         if (this.allPlayerActionsBroken()) {
@@ -469,7 +468,7 @@ class Table {
     }
 
     /*
-        return Boolean : テーブルがプレイヤー配列の最初のプレイヤーにフォーカスされている場合はtrue、そうでない場合はfalse。
+        return Boolean : テーブルがプレイヤー配列の最初のプレイヤーにフォーカスされている場合はtrue、そうでない場合はfalse
     */
     onFirstPlayer() {
         let numberOfPlayers = this.players.length;
@@ -477,7 +476,7 @@ class Table {
     }
 
     /*
-        return Boolean : テーブルがプレイヤー配列の最後のプレイヤーにフォーカスされている場合はtrue、そうでない場合はfalse。
+        return Boolean : テーブルがプレイヤー配列の最後のプレイヤーにフォーカスされている場合はtrue、そうでない場合はfalse
     */
     onLastPlayer() {
         let numberOfPlayers = this.players.length;
@@ -485,7 +484,7 @@ class Table {
     }
     
     /*
-        全てのプレイヤーがセット{'broken', 'bust', 'stand', 'surrender'}のgameStatusを持っていればtrueを返し、持っていなければfalse。
+        全てのプレイヤーがセット{'broken', 'bust', 'stand', 'surrender'}のgameStatusを持っていればtrueを返し、持っていなければfalse
     */
     allPlayerActionsResolved() {
         let hashMap = {
@@ -574,7 +573,7 @@ class View {
         `
             <p class="text-white text-center">Welcome to Card Game!</p>
             <form name="form1" action="">
-                <input type="text" name="userName" class="col-12" placeholder="name" value="">
+                <input type="text" name="userName" class="col-12" placeholder="name" value="" maxlength='8'>
             </form>
         `
 
@@ -649,31 +648,30 @@ class View {
 
     static userNameTag(playerName) {
         let userNameTag = document.createElement('p');
-        userNameTag.classList.add('text-white', 'text-center', 'rem3');
-        userNameTag.innerText = playerName;
+        userNameTag.classList.add('text-white', 'text-center');
+        userNameTag.innerHTML = `<b>${playerName}</b>`;
 
         return userNameTag;
     }
 
     // info = ['action', 'bet', 'chip'] -> case of player
     // info = ['action'] -> case of house
-    static playerInfoDiv(infoList) {
-        //     <div class="text-white d-flex m-0 p-0 justify-content-between">
+    static playerInfoDiv(infoMap) {
+        //     <div class="text-white d-flex flex-column align-items-center">
         //         <p class="rem1 text-left">action:BUST </p>
         //         <p class="rem1 text-left">bet:0 </p>
         //         <p class="rem1 text-left">chip:255 </p>
         //     </div>
 
         let playerInfoTag = document.createElement('div');
-        playerInfoTag.classList.add('text-white', 'd-flext', 'justify-content-between');
+        playerInfoTag.classList.add('text-white', 'd-flex', 'flex-column', 'align-items-center');
 
-        for (let info of infoList) {
+        Object.keys(infoMap).forEach(key => {
             let p = document.createElement('p');
-            p.classList.add('rem1', 'text-left');
-            p.innerText = info;
-
+            p.classList.add(key);
+            p.innerHTML = `${key} : ${infoMap[key]}`; 
             playerInfoTag.append(p);
-        }
+        })
 
         return playerInfoTag;
     }
@@ -725,26 +723,28 @@ class View {
         let actionAndBet = View.actionAndBetDiv();
         actionAndBet.innerHTML = '';
         for (let amount of amounts) {
-            let wagerContainer = `
-                <div class="m-2 d-flex flex-column align-items-center wager">
-                    <button type='button' class="btn btn-primary wager-btn">${amount}</button>
-                    <input class="input_number mt-2" type="number" style="text-align: right;" min="0" value="0">
-                </div>`
+            let wagerContainer = document.createElement('div');
+            wagerContainer.classList.add('m-2', 'd-flex', 'flex-column', 'align-items-center', 'wager');
+            wagerContainer.innerHTML = `
+            <button type='button' class="btn btn-primary wager-btn">${amount}</button>
+            <input class="input_number mt-2" type="number" style="text-align: right;" min="0" value="0">
+            `
             actionAndBet.append(wagerContainer);
         }
         return actionAndBet;
     }
 
     static dealBtn() {
-        let deal = `
-            <div class="d-flex flex-column align-items-center mt-2">
-                <div class="text-white" id="total-wager">
-                    <font size='6'>Total : 0</font>
-                </div>
-                <button type='button' class="btn btn-light bet-btn mt-2">
-                    <font size='5'>deal</font>
-                </button>
+        let deal = document.createElement('div');
+        deal.classList.add("d-flex", 'flex-column', 'align-items-center', 'mt-2');
+        deal.innerHTML = 
+        `       
+            <div class="text-white" id="total-wager">
+                <font size='5'>Total : 0</font>
             </div>
+            <button type='button' class="btn btn-light bet-btn mt-2">
+                <font size='5'>deal</font>
+            </button>
         `
         return deal;
     }
@@ -758,18 +758,52 @@ class View {
         }
     }
 
+    static refleshTable() {
+        config.players.innerHTML = "";
+        config.house.innerHTML = "";
+    }
+
     static playerRow(table) {
         let players = table.players;
 
         let playersDiv = config.players;
+
+        let userPosition = 1;
         for (let i = 1; i <= players.length; i++) {
+            let status = {
+                'action' : players[i-1].gameStatus,
+                'chips' : players[i-1].chips,
+                'bet' : players[i-1].bet
+            }
+            userPosition = players[i-1].type === 'user' ? i : userPosition;
+
+            let playerStatus = View.playerInfoDiv(status);
             let row = View.playerDiv(i);
             let card = View.createCardDiv(players[i-1].hand);
             let userTag = View.userNameTag(players[i-1].name);
-
-            row.append(userTag, card);
+            row.append(userTag, playerStatus, card);
             playersDiv.append(row);
         }
+
+        let user = document.getElementById(`player${userPosition}`)
+        user.append(View.wagerBtn([5,20,50,100]), View.dealBtn());
+
+        View.houseRow(table);
+    }
+
+    static houseRow(table) {
+        let houseDiv = config.house;
+
+        let status = {
+            'action' : table.house.gameStatus,
+        }
+        let row = document.createElement('div');
+        let playerStatus = View.playerInfoDiv(status);
+        let card = View.createCardDiv(table.house.hand);
+        let userTag = View.userNameTag('House');
+
+        row.append(userTag, playerStatus, card);
+        houseDiv.append(row);
     }
 }
 
@@ -817,13 +851,13 @@ class Controller {
 Controller.createIinitailScreen(gameList);
 
 
-let table1 = new Table("blackjack");
-while(table1.gamePhase != 'roundOver') {
-    table1.haveTurn();
+// let table1 = new Table("blackjack");
+// while(table1.gamePhase != 'roundOver') {
+//     table1.haveTurn();
 
-    if (table1.gamePhase === 'evaluation') {
-        table1.blackjackEvaluateAndGetRoundResults();
-        table1.blackjackClearPlayerHandsAndBets();
-    }
-}
-console.log(table1.resultsLog);
+//     if (table1.gamePhase === 'evaluation') {
+//         table1.blackjackEvaluateAndGetRoundResults();
+//         table1.blackjackClearPlayerHandsAndBets();
+//     }
+// }
+// console.log(table1.resultsLog);
