@@ -145,7 +145,7 @@ class Deck {
 */
     resetDeck(gameType) {
         this.cards = null;
-        this.cards = Deck.generateDeck();
+        this.cards = gameType === "blackjack" ? Deck.generateDeck() : [];
     }
     
 /*
@@ -205,9 +205,9 @@ class Player {
     このメソッドは、どのようなベットやアクションを取るべきかというプレイヤーの決定を取得 プレイヤーのタイプ、ハンド、チップの状態を読み取り、GameDecisionを返す　パラメータにuserData使うことによって、プレイヤーが「user」の場合、このメソッドにユーザーの情報を渡すことが可能、プレイヤーが 「ai」の場合、 userDataがデフォルトとしてnullを使う
 */
     promptPlayer(userData) {
-        if (userData === undefined) {
+        if (this.type === 'ai') {
             let option = ['surrender', 'stand', 'hit', 'double'];
-            if (this.gameStatus === 'betting') {
+            if (this.gameStatus === 'acting') {
                 let index = Player.getRandomInteger(option.length, 0);
                 this.gameStatus = option[index];
                 // doubleが選択された場合、ベット金額を2倍にした額が所持しているチップを超えていないか確認
@@ -219,14 +219,13 @@ class Player {
                     this.gameStatus = option[index];
                 }
             }
-            else if (this.gameStatus === 'stand') {
+            else if (this.gameStatus === 'hit') {
                 let index = Player.getRandomInteger(2, 1);
                 this.gameStatus = option[index];
             }
         }
         else {
-            this.gameStatus = userData[0];
-            this.bet = userData[1];
+            this.gameStatus = userData;
         }
 
         return new GameDecision(this.gameStatus, this.bet);
@@ -276,7 +275,7 @@ class Table {
         Array betDenominations : プレイヤーが選択できるベットの単位。デフォルトは[5,20,50,100]
         return Table : ゲームフェーズ、デッキ、プレイヤーが初期化されたテーブル
     */
-    constructor(gameType, userName, betDenominations = [5,20,50,100]) {
+    constructor(gameType,　userName, betDenominations = [5,20,50,100]) {
         // ゲームタイプを表します。
         this.gameType = gameType;
         
@@ -284,36 +283,26 @@ class Table {
         this.betDenominations = betDenominations;
         
         // テーブルのカードのデッキ
-        this.deck = new Deck(this.gameType);
+        this.deck = new Deck(this.gameType).shuffle();
         
         // プレイしているゲームに応じて、プレイヤー、gamePhases、ハウスの表現が異なるかも。
         // 今回はとりあえず3人のAIプレイヤーとハウス、「betting」フェースの始まりにコミット
-        this.players = [];
         // Player 初期化
-
-        // AI 
-        for (let i = 1; i <= 2; i++) {
-            let aiPlayer = new Player(`AI${i}`, 'ai', this.gameType);
-            aiPlayer.hand = [new Card('?',0), new Card('?',0)];
-            this.players.push(aiPlayer);
-        }
-        // User
+        let ai1 = new Player('AI1', 'ai', this.gameType);
+        let ai2 = new Player('AI2', 'ai', this.gameType);
         let user = new Player(userName, 'user', this.gameType);
-        user.hand = [new Card('?',0), new Card('?',0)];
-        this.players.push(user);
+
+        this.players = [ai1, user, ai2];
 
         this.house = new Player('house', 'house', this.gameType);
-        this.house.hand = [new Card('?',0), new Card('?',0)];
 
-        // {'betting', 'acting', 'roundOver', gameOver'} 
+        // {'betting', 'acting', 'evaluatingWinners', gameOver'}
         this.gamePhase = 'betting'
 
         // これは各ラウンドの結果をログに記録するための文字列の配列
         this.resultsLog = [];
 
         this.turnCounter = 0;
-        
-        this.roundCounter = 1;
     }
     /*
         Player player : テーブルは、player.promptPlayer()を使用してGameDecisionを取得し、GameDecisionとgameTypeに応じてPlayerの状態を更新
@@ -338,7 +327,6 @@ class Table {
             let score = player.getHandScore();
             if (score > 21) {
                 player.gameStatus = 'bust';
-                // player.bet = -1 * player.bet;
                 player.winAmount = -1 * player.bet;
             }
         }
@@ -347,7 +335,6 @@ class Table {
         }
         else if (decision.action === 'surrender') {
             player.gameStatus = decision.action;
-            // player.bet = -1 * player.bet / 2;
             player.winAmount = -1 * player.bet / 2;
         }
     }
@@ -408,15 +395,20 @@ class Table {
         return null : デッキから2枚のカードを手札に加えることで、全プレイヤーの状態を更新
         NOTE: プレイヤーのタイプが「ハウス」の場合は、別の処理を行う
     */
-    blackjackAssignPlayerHands(player) {
-        if (player != undefined) {
-            if (player.gameStatus === "betting") player.hand = [this.deck.drawOne(), this.deck.drawOne()];
+    blackjackAssignPlayerHands() {
+        if (this.gamePhase === 'acting') {
+            for (let player of this.players) {
+                player.hand = [this.deck.drawOne(), this.deck.drawOne()];
+            }
         }
-        if (this.house.gameStatus === "betting") this.house.hand = [this.deck.drawOne(), this.deck.drawOne()];
-        while (this.house.getHandScore() < 17) {
-            this.house.hand.push(this.deck.drawOne());
-        }
-        this.house.gameStatus = this.house.getHandScore() > 21 ? 'bust' : 'stand';
+
+        this.house.hand = [this.deck.drawOne(), this.deck.drawOne()];
+        
+        // while (this.house.getHandScore() < 17) {
+        //     this.house.hand.push(this.deck.drawOne());
+        //     console.log(this.house.hand);
+        // }
+        // this.house.gameStatus = this.house.getHandScore() > 21 ? 'bust' : 'stand';
     }
 
     /*
@@ -425,12 +417,12 @@ class Table {
     blackjackClearPlayerHandsAndBets() {
         // broken -> chip消失したユーザー　ゲームへ参加できない
         for (let player of this.players) {
-            player.hand = [new Card('?',0), new Card('?',0)];
+            player.hand = [];
             player.gameStatus = player.chips > 0 ? 'betting' : 'broken';
             player.bet = 0;
         }
 
-        this.house.hand = [new Card('?',0), new Card('?',0)];
+        this.house.hand = [];
         this.house.gameStatus = 'betting';
     }
     
@@ -464,7 +456,6 @@ class Table {
                 this.gamePhase === 'acting';
             }
         }
-        this.turnCounter++;
     }
 
     /*
@@ -727,10 +718,10 @@ class View {
             wagerContainer.classList.add('m-2', 'd-flex', 'flex-column', 'align-items-center', 'wager');
             wagerContainer.innerHTML = `
             <button type='button' class="btn btn-primary wager-btn">${amount}</button>
-            <input class="input_number mt-2" type="number" style="text-align: right;" min="0" value="0">
             `
             actionAndBet.append(wagerContainer);
         }
+
         return actionAndBet;
     }
 
@@ -742,21 +733,13 @@ class View {
             <div class="text-white" id="total-wager">
                 <font size='5'>Total : 0</font>
             </div>
-            <button type='button' class="btn btn-light bet-btn mt-2">
+            <button type='button' class="btn btn-light deal-btn mt-2">
                 <font size='5'>deal</font>
             </button>
         `
         return deal;
     }
 
-    static renderTable(table) {
-        if (table.gamePhase === 'betting') View.playerRow(table);
-        if (table.getTurnPlayer().type === 'user') {
-            if (table.gamePhase === 'betting') {
-
-            }
-        }
-    }
 
     static refleshTable() {
         config.players.innerHTML = "";
@@ -805,6 +788,10 @@ class View {
         row.append(userTag, playerStatus, card);
         houseDiv.append(row);
     }
+
+    static renderTable(table) {
+        View.playerRow(table);
+    }
 }
 
 
@@ -828,9 +815,16 @@ class Controller {
             // 初期画面削除
             document.getElementById('initial-screen').remove();
 
-            let table = new Table(choiceGame, userName);
+            let table = new Table(choiceGame.toLowerCase(), userName);
             View.display_block(config.gameStart);
-            View.renderTable(table);
+            Controller.inProgress(table);
+        })
+    }
+
+    static betting(table) {
+        document.querySelector('.deal-btn').addEventListener('click', function() {
+            let totalwager = document.querySelector('#total-wager font').innerHTML;
+            table.getTurnPlayer().chips = totalwager;
         })
     }
 
