@@ -147,21 +147,17 @@ class GameDecision {
 
 class Table {
     constructor(gameType, userName, betDenominations = [1, 5,20,50,100]) {
-        // ゲームタイプを表します。
         this.gameType = gameType;
-        
-        // プレイヤーが選択できるベットの単位。
         this.betDenominations = betDenominations;
         
-        // テーブルのカードのデッキ
         this.deck = new Deck(this.gameType);
         this.deck.shuffle();
         
         this.players = [];
 
         this.players.push(new Player("AI1", "ai", this.gameType));
-        this.players.push(new Player(userName, "user", this.gameType));
         this.players.push(new Player("AI2", "ai", this.gameType));
+        this.players.push(new Player(userName, "user", this.gameType));
 
         this.house = new Player('house', 'house', this.gameType);
 
@@ -262,9 +258,6 @@ class Table {
         }
     }
 
-    resetGamePhase() {
-        this.gamePhase = 'betting';
-    }
 
     blackjackClearPlayerHandsAndBets() {
         for (let player of this.players) {
@@ -303,23 +296,6 @@ class Table {
         this.turnCounter++;
     }
 
-    isGameOver() {
-        if (this.allPlayerActionsBroken()) {
-            this.gamePhase = 'gameOver';
-            return true
-        }
-        return false;
-    }
-
-    onFirstPlayer() {
-        let numberOfPlayers = this.players.length;
-        return this.turnCounter % numberOfPlayers === 0 ? true : false;
-    }
-
-    onLastPlayer() {
-        let numberOfPlayers = this.players.length;
-        return this.turnCounter % numberOfPlayers === numberOfPlayers ? true : false;
-    }
     
     allPlayerActionsResolved() {
         let hashMap = {
@@ -328,6 +304,7 @@ class Table {
             'surrender' : true,
             'double' : true,
             'gameOver' : true,
+            'black jack' : true,
         };
         for (let player of this.players) {
             if (hashMap[player.gameStatus] === undefined) return false;
@@ -335,12 +312,15 @@ class Table {
         return true;
     }
 
-    allPlayerActionsBroken() {
+    isUserGameOver() {
         let hashMap = {
             'gameOver' : true
         }
         for (let player of this.players) {
-            if (player.type === 'user' && hashMap[player.gameStatus] != undefined) return true;
+            if (player.type === 'user' && hashMap[player.gameStatus] != undefined) {
+                this.gamePhase = 'gameOver';
+                return true;
+            }
         }
         return false;
     }
@@ -350,8 +330,8 @@ class Table {
             if (player.type === 'user') player.bet = bet;
         }
     }
-    // userが複数いた場合は意味無し　[ai, ai, user, ai, user]
-    // 必ず1人目しか取れない　
+
+
     getUserChips() {
         for (let player of this.players) {
             if (player.type === 'user') return player.chips;
@@ -377,6 +357,23 @@ class Table {
     resetRoundCounter() {
         this.roundCounter = 1;
     } 
+
+    resetTableStatus() {
+        this.setGamePhase('betting');
+        this.resetRoundCounter();
+        this.resetTurnCounter();
+        this.resultsLog = [];
+        for (let player of this.players) {
+            player.gameStatus = 'betting';
+            player.hand = [new Card('?', '?'), new Card('?', '?')];
+            player.winAmount = 0;
+            player.chips = 400;
+            player.bet = 0;
+        }
+
+        this.house.hand = [new Card('?', '?'), new Card('?', '?')];
+        this.house.gameStatus = 'waiting for actions';
+    }
 }
 
 const config = {
@@ -423,7 +420,7 @@ class View {
         div.innerHTML += `
             <p class="text-white"> Welcome to Card Game!</p>
             <div class="userName">
-                <input type="text" name="userName" placeholder="name">
+                <input type="text" name="userName" placeholder="name" maxlength='10'>
             </div>
             <div class="gameType">
                 <select class="w-100" name="choice">
@@ -695,10 +692,10 @@ class View {
         btnsDiv.innerHTML = 
                         `
                         <div class="py-2">
-                            <button class="btn btn-primary px-5 py-1 loginpage">LoginPage</button>
+                            <button class="btn btn-primary px-5 py-1 btn-continue-or-end">LoginPage</button>
                         </div>
                         <div class="py-2">
-                            <button class="btn btn-light px-5 py-1 continue">Continue</button>
+                            <button class="btn btn-light px-5 py-1 btn-continue-or-end">Continue</button>
                         </div>
                         `
         document.getElementById(ids.logPage).append(logDiv, btnsDiv);
@@ -744,14 +741,14 @@ class Controller {
             if (curplayer.type === 'user') {
                 if (curplayer.gameStatus === 'acting' || curplayer.gameStatus === 'hit') {
                     Controller.decisionAction(table, curplayer);
-                    return ;
                 }
                 else {
                     table.increaseTurnCounter();
                     Controller.manageTable(table);
                 }
             }
-            else if (curplayer.type === 'ai') {
+
+            else {
                 table.haveTurn();
                 setTimeout(function() {
                     Controller.manageTable(table);
@@ -763,8 +760,8 @@ class Controller {
             View.renderTable(table);
             table.blackjackClearPlayerHandsAndBets();
             table.increaseRoundCounter();
-            if (!table.isGameOver()) {
-                table.resetGamePhase();
+            if (!table.isUserGameOver()) {
+                table.setGamePhase('betting');
                 table.resetTurnCounter();
             }
 
@@ -774,13 +771,12 @@ class Controller {
 
         }
         else if (table.gamePhase === 'gameOver') {
-            table.resetRoundCounter();
             let gameResults = [];
             for (let res of table.resultsLog) {
                 gameResults.push(res.replace(/[\n]/g, '<br>'));
             }
             View.renderTable(table, 0, gameResults);
-            return ;
+            Controller.continueOrEnd(table);
         }
     }
 
@@ -790,12 +786,12 @@ class Controller {
             let totalBet = parseInt(document.querySelector('.total-bet').innerHTML.replace(/[^0-9]/g, ''));
 
             if (totalBet === 0 || totalBet > table.getUserChips()) {
-                alert('test');
+                alert('invalid value');
                 return ;
             }
             table.setUserBet(totalBet);
             table.setGamePhase('acting');
-            return Controller.manageTable(table);
+            Controller.manageTable(table);
         })
     }
 
@@ -808,7 +804,7 @@ class Controller {
                 let curValue = parseInt(inputTag.value); 
                 inputTag.value = i % 2 === 0 ? curValue - 1 : curValue + 1;
                 if (inputTag.value < 0) {
-                    alert('test');
+                    alert('invalid value');
                     inputTag.value = 0;
                     return ;
                 }
@@ -824,8 +820,24 @@ class Controller {
             action.addEventListener('click', function () {
                 let act = new UserAction(action.innerHTML.toLowerCase(), player.bet);
                 table.haveTurn(act);
-                
                 Controller.manageTable(table);
+            })
+        }
+    }
+
+
+    static continueOrEnd(table) {
+        let continueOrEndBtn = document.querySelectorAll('.btn-continue-or-end');
+        for (let btn of continueOrEndBtn) {
+            btn.addEventListener('click', function() {
+                if (btn.innerHTML.toLowerCase() === 'loginpage') {
+                    View.initialize(config.gameDiv);
+                    Controller.initialScreen();
+                } 
+                else  {
+                    table.resetTableStatus();
+                    Controller.manageTable(table);
+                }
             })
         }
     }
@@ -834,6 +846,3 @@ class Controller {
 }
 
 Controller.initialScreen();
-
-
-// todo continue ボタンが押された場合、テーブルとプレイヤーをリセット、　gametypeとusernameはそのまま
