@@ -58,16 +58,8 @@ class Deck {
     }
 }
 
-class UserAction {
-    constructor(action, bet) {
-        this.action = action;
-        this.bet = bet;
-    }
-}
-
-
 class Player {
-    constructor(name, type, gameType, chips = 400) {
+    constructor(name, type, gameType, chips = 3) {
         this.name = name;
         this.type = type;
         this.gameType = gameType;
@@ -83,12 +75,11 @@ class Player {
         return Math.floor(Math.random() * (max - min) + min);
     }
 
-    promptPlayer(betDenominations, userData) {
+    promptPlayer(userAction) {
         let act = this.gameStatus;
         if (this.type === 'ai') {
             let option = ['surrender', 'stand', 'hit', 'double'];
             if (this.gameStatus === 'acting') {
-                this.decisionBet(betDenominations);
                 let index = Player.getRandomInteger(option.length, 0);
                 act = option[index];
 
@@ -106,17 +97,16 @@ class Player {
             }
         }
         else {
-            act = userData.action;
+            act = userAction;
         }
         return new GameDecision(act, this.bet);
     }
 
     decisionBet(betDenominations) {
-        let minimum = Math.min(...betDenominations);
         while (true) {
             let i = Math.floor(Math.random() * betDenominations.length);
             this.bet = betDenominations[i];
-            if (this.bet <= this.chips || this.chips < minimum) break;
+            if (this.bet <= this.chips) break;
         }
     }
 
@@ -148,6 +138,7 @@ class GameDecision {
 class Table {
     constructor(gameType, userName, betDenominations = [1, 5,20,50,100]) {
         this.gameType = gameType;
+
         this.betDenominations = betDenominations;
         
         this.deck = new Deck(this.gameType);
@@ -156,8 +147,8 @@ class Table {
         this.players = [];
 
         this.players.push(new Player("AI1", "ai", this.gameType));
-        this.players.push(new Player("AI2", "ai", this.gameType));
         this.players.push(new Player(userName, "user", this.gameType));
+        this.players.push(new Player("AI2", "ai", this.gameType));
 
         this.house = new Player('house', 'house', this.gameType);
 
@@ -173,9 +164,10 @@ class Table {
 
 
     evaluateMove(player, userData) {
-        let decision = player.promptPlayer(this.betDenominations, userData, this);
+        let decision = player.promptPlayer(userData);
 
         player.gameStatus = decision.action;
+
         if (decision.action === 'hit') {
             player.hand.push(this.deck.drawOne());
             let score = player.getHandScore();
@@ -184,17 +176,12 @@ class Table {
                 player.winAmount = -1 * player.bet;
             }
         }
-        else if (decision.action === 'double') {
-            if (player.hand.length === 2) {
-                player.hand.push(this.deck.drawOne());
-                player.bet *= 2;
-            }
+        else if (decision.action === 'double' && player.hand.length === 2) {
+            player.hand.push(this.deck.drawOne());
+            player.bet *= 2;
         }
         else if (decision.action === 'surrender') {
             player.winAmount = Math.floor(-1 * player.bet / 2);
-        }
-        else {
-            player.gameStatus = decision.action;
         }
     }
 
@@ -202,12 +189,13 @@ class Table {
         while (this.house.getHandScore() < 17) {
             this.house.hand.push(this.deck.drawOne());
         }
-        this.house.gameStatus = this.house.getHandScore() > 21 ? 'bust' : 'stand';
+
         let houseHandScore = this.house.getHandScore();
+        this.house.gameStatus = houseHandScore > 21 ? 'bust' : 'stand';
+        let hasHouseBlackJack = houseHandScore === 21 && this.house.hand.length === 2;
 
         this.resultsLog.push(`Round: ${this.roundCounter}`);
         let playerResult = "";
-        let hasHouseBlackJack = houseHandScore === 21 && this.house.hand.length === 2;
         for (let player of this.players) {
             let hasPlayerBlackJack = player.getHandScore() === 21 && player.hand.length === 2;
             if (player.gameStatus === 'surrender' || player.gameStatus === 'bust') {
@@ -217,36 +205,26 @@ class Table {
                 player.winAmount = -1 * player.bet;
             }
             else if (hasHouseBlackJack) {
-                this.house.gameStatus = 'black jack'
-                if (!hasPlayerBlackJack) {
-                    player.winAmount = -1 * player.bet;
-                }
-                else {
-                    player.winAmount = 0;
-                }
+                this.house.gameStatus = 'black jack';
+                player.winAmount = hasPlayerBlackJack ? 0 : -1 * player.bet;
+            }
+            else if (this.house.gameStatus === 'bust' || player.getHandScore() > houseHandScore) {
+                player.winAmount = hasPlayerBlackJack ? Math.floor(player.bet * 1.5) : player.bet;
+            }
+            else if (this.house.gameStatus === 'stand' && houseHandScore > player.getHandScore()) {
+                player.winAmount = -1 * player.bet;
             }
             else if (houseHandScore === player.getHandScore()) {
                 player.winAmount = 0;
             }
-            else if (this.house.gameStatus === 'bust' || player.getHandScore() > houseHandScore) {
-                if (hasPlayerBlackJack) {
-                    player.winAmount = Math.floor(player.bet * 1.5);
-                }
-                else  {
-                    player.winAmount = player.bet;
-                }
-            }
-            else if (this.house.gameStatus != 'bust' && houseHandScore > player.getHandScore()) {
-                player.winAmount = -1 * player.bet;
-            }
 
-            playerResult += `name : ${player.name}, action : ${player.gameStatus}, won : ${player.winAmount}, chips : ${player.chips}, bet ${player.bet} \n`;
+            playerResult += `<li>name : ${player.name}, action : ${player.gameStatus}, won : ${player.winAmount}, chips : ${player.chips}, bet ${player.bet}s</li>`;
         }
         this.resultsLog.push(playerResult);
     }
 
     blackjackAssignPlayerHands() {
-        for (let player of  this.players) {
+        for (let player of this.players) {
             if (player.gameStatus === "betting") {
                 player.hand = [this.deck.drawOne(), this.deck.drawOne()];
                 player.gameStatus = 'acting';
@@ -273,9 +251,7 @@ class Table {
     }
 
     getTurnPlayer() {
-        let numberOfPlayers = this.players.length;
-        let player = this.players[this.turnCounter % numberOfPlayers];
-        return player;
+        return this.players[this.turnCounter % this.players.length];
     }
 
     getCurIndex() {
@@ -291,7 +267,6 @@ class Table {
         else {
             let player = this.getTurnPlayer();
             this.evaluateMove(player, userData);
-
         }
         this.turnCounter++;
     }
@@ -330,7 +305,6 @@ class Table {
             if (player.type === 'user') player.bet = bet;
         }
     }
-
 
     getUserChips() {
         for (let player of this.players) {
@@ -372,13 +346,21 @@ class Table {
         }
 
         this.house.hand = [new Card('?', '?'), new Card('?', '?')];
-        this.house.gameStatus = 'waiting for actions';
+        this.house.gameStatus = 'betting';
+    }
+
+    decisionBetOfAI() {
+        for (let player of this.players) {
+            if (player.type === 'ai' && player.gameStatus != 'gameOver') {
+                player.decisionBet(this.betDenominations);
+            }
+        }
     }
 }
 
 const config = {
     gameDiv : document.getElementById('gameDiv'),
-    judgmentTime : 3000,
+    judgmentTime : 4000,
     actionInterval : 2000,
 
 }
@@ -405,16 +387,6 @@ class View {
         ele.innerHTML = "";
     }
     
-    static display_none(ele) {
-        ele.classList.add("d-none");
-        ele.classList.remove("d-block");
-    }
-
-    static display_block(ele) {
-        ele.classList.add("d-block");
-        ele.classList.remove("d-none");
-    }
-
     static loginPage() {
         let div = document.createElement('div');
         div.innerHTML += `
@@ -678,11 +650,11 @@ class View {
 
 
         let logDiv = document.createElement('div');
-        logDiv.classList.add('text-white', 'text-center', 'log');
+        logDiv.classList.add('text-white', 'd-flex', 'flex-column', 'align-items-center', 'log');
 
         for (let i = 0; i < gameResults.length; i++) {
             let tag = null;
-            tag = i % 2 === 0 ? document.createElement('h4') : document.createElement('p');
+            tag = i % 2 === 0 ? document.createElement('h4') : document.createElement('ul');
             tag.innerHTML = gameResults[i];
             logDiv.append(tag);
         }
@@ -735,18 +707,17 @@ class Controller {
         else if (table.gamePhase === 'acting') {
             let curIndex = table.getCurIndex();
             let curplayer = table.getTurnPlayer();
-
+            console.log(table);
             View.renderTable(table, curIndex);
             if (curplayer.type === 'user') {
                 if (curplayer.gameStatus === 'acting' || curplayer.gameStatus === 'hit') {
-                    Controller.decisionAction(table, curplayer);
+                    Controller.decisionAction(table);
                 }
                 else {
                     table.increaseTurnCounter();
                     Controller.manageTable(table);
                 }
             }
-
             else {
                 table.haveTurn();
                 setTimeout(function() {
@@ -770,11 +741,7 @@ class Controller {
 
         }
         else if (table.gamePhase === 'gameOver') {
-            let gameResults = [];
-            for (let res of table.resultsLog) {
-                gameResults.push(res.replace(/[\n]/g, '<br>'));
-            }
-            View.renderTable(table, 0, gameResults);
+            View.renderTable(table, undefined, table.resultsLog);
             Controller.continueOrEnd(table);
         }
     }
@@ -789,6 +756,7 @@ class Controller {
                 return ;
             }
             table.setUserBet(totalBet);
+            table.decisionBetOfAI();
             table.setGamePhase('acting');
             Controller.manageTable(table);
         })
@@ -813,12 +781,11 @@ class Controller {
         }
     }
 
-    static decisionAction(table, player) {
+    static decisionAction(table) {
         let actions = document.querySelectorAll('.action-btn');
         for (let action of actions) {
             action.addEventListener('click', function () {
-                let act = new UserAction(action.innerHTML.toLowerCase(), player.bet);
-                table.haveTurn(act);
+                table.haveTurn(action.innerHTML.toLowerCase());
                 Controller.manageTable(table);
             })
         }
