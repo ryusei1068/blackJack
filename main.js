@@ -59,7 +59,7 @@ class Deck {
 }
 
 class Player {
-    constructor(name, type, gameType, chips = 3) {
+    constructor(name, type, gameType, chips = 400) {
         this.name = name;
         this.type = type;
         this.gameType = gameType;
@@ -78,22 +78,21 @@ class Player {
     promptPlayer(userAction) {
         let act = this.gameStatus;
         if (this.type === 'ai') {
-            let option = ['surrender', 'stand', 'hit', 'double'];
+            let actions = ['surrender', 'stand', 'hit', 'double'];
             if (this.gameStatus === 'acting') {
-                let index = Player.getRandomInteger(option.length, 0);
-                act = option[index];
-
+                let index = Player.getRandomInteger(actions.length, 0);
+                act = actions[index];
                 if (this.getHandScore() === 21) {
                     act = 'black jack';
                 }
                 else if (act === 'double' && this.chips < this.bet * 2) {
-                    let index = Player.getRandomInteger(option.length -1, 0);
-                    act = option[index];
+                    let index = Player.getRandomInteger(actions.length -1, 0);
+                    act = actions[index];
                 }
             }
             else if (act === 'hit') {
-                let index = Player.getRandomInteger(2, 1);
-                act = option[index];
+                let index = Player.getRandomInteger(3, 1);
+                act = actions[index];
             }
         }
         else {
@@ -136,7 +135,7 @@ class GameDecision {
 }
 
 class Table {
-    constructor(gameType, userName, betDenominations = [1, 5,20,50,100]) {
+    constructor(gameType, userName, type, betDenominations = [1, 5,20,50,100]) {
         this.gameType = gameType;
 
         this.betDenominations = betDenominations;
@@ -146,9 +145,9 @@ class Table {
         
         this.players = [];
 
-        this.players.push(new Player("AI1", "ai", this.gameType));
-        this.players.push(new Player(userName, "user", this.gameType));
-        this.players.push(new Player("AI2", "ai", this.gameType));
+        this.players.push(new Player("ai1", "ai", this.gameType));
+        this.players.push(new Player(userName, type, this.gameType));
+        this.players.push(new Player("ai2", "ai", this.gameType));
 
         this.house = new Player('house', 'house', this.gameType);
 
@@ -205,7 +204,6 @@ class Table {
                 player.winAmount = -1 * player.bet;
             }
             else if (hasHouseBlackJack) {
-                this.house.gameStatus = 'black jack';
                 player.winAmount = hasPlayerBlackJack ? 0 : -1 * player.bet;
             }
             else if (this.house.gameStatus === 'bust' || player.getHandScore() > houseHandScore) {
@@ -218,7 +216,7 @@ class Table {
                 player.winAmount = 0;
             }
 
-            playerResult += `<li>name : ${player.name}, action : ${player.gameStatus}, won : ${player.winAmount}, chips : ${player.chips}, bet ${player.bet}s</li>`;
+            playerResult += `<li>name : ${player.name}, action : ${player.gameStatus}, won : ${player.winAmount}, chips : ${player.chips}, bet ${player.bet}</li>`;
         }
         this.resultsLog.push(playerResult);
     }
@@ -287,12 +285,12 @@ class Table {
         return true;
     }
 
-    isUserGameOver() {
+    isGameOver(type) {
         let hashMap = {
             'gameOver' : true
         }
         for (let player of this.players) {
-            if (player.type === 'user' && hashMap[player.gameStatus] != undefined) {
+            if (player.type === type && hashMap[player.gameStatus] != undefined) {
                 this.gamePhase = 'gameOver';
                 return true;
             }
@@ -351,7 +349,7 @@ class Table {
 
     decisionBetOfAI() {
         for (let player of this.players) {
-            if (player.type === 'ai' && player.gameStatus != 'gameOver') {
+            if (player.type === 'ai') {
                 player.decisionBet(this.betDenominations);
             }
         }
@@ -360,7 +358,7 @@ class Table {
 
 const config = {
     gameDiv : document.getElementById('gameDiv'),
-    judgmentTime : 4000,
+    judgmentTime : 3000,
     actionInterval : 2000,
 
 }
@@ -586,7 +584,7 @@ class View {
     }
 
     static renderActionsBtn(table) {
-        let user = null;
+        let user = undefined;
         for (let player of table.players) {
             if (player.type === 'user') {
                 user = player;
@@ -613,16 +611,19 @@ class View {
                         <button class="btn btn-danger px-5 py-1 action-btn double">Double</button>
                     </div>
                     `
-        if (user.bet * 2 > user.chips) {
-            div.querySelector('.double').disabled = true;
-        }
-        if (user.gameStatus === 'hit') {
-            div.querySelector('.surrender').disabled = true;
-            div.querySelector('.double').disabled = true;
-        }
 
-        if (table.gamePhase === 'evaluation') div.innerHTML = "";
-        document.getElementById(ids.acitionsAndBetsDiv).append(div);
+        if (user != undefined) {
+            if (user.bet * 2 > user.chips) {
+                div.querySelector('.double').disabled = true;
+            }
+            if (user.gameStatus === 'hit') {
+                div.querySelector('.surrender').disabled = true;
+                div.querySelector('.double').disabled = true;
+            }
+    
+            if (table.gamePhase === 'evaluation') div.innerHTML = "";
+            document.getElementById(ids.acitionsAndBetsDiv).append(div);
+        }
     }
 
     static setActionsAndBet() {
@@ -675,8 +676,6 @@ class View {
 }
 
 class Controller {
-
-
     static initialScreen() {
         View.loginPage();
         Controller.pushStartBtn()
@@ -690,38 +689,39 @@ class Controller {
                 return ;
             }
             let gameType = document.querySelector('.gameType select[name="choice"]').value;
-
-            let table = new Table(gameType, userName);
-
-            Controller.manageTable(table);
+            let type = userName === 'ai' ? 'ai' : 'user';
+            let table = new Table(gameType, userName, type);
+            let existsUser = type === 'user' ? true : false;
+            Controller.manageTable(table, existsUser);
         })
     }
 
-    static manageTable(table) {
+    static manageTable(table, existsUser) {
+        console.log(table.gamePhase);
         if (table.gamePhase === 'betting') {
             View.renderTable(table);
             Controller.pushIncreaseOrDecreaseBtn();
-            Controller.pushDealBtn(table);
+            Controller.pushDealBtn(table, existsUser);
             table.blackjackAssignPlayerHands();
         }
         else if (table.gamePhase === 'acting') {
             let curIndex = table.getCurIndex();
             let curplayer = table.getTurnPlayer();
-            console.log(table);
+
             View.renderTable(table, curIndex);
             if (curplayer.type === 'user') {
                 if (curplayer.gameStatus === 'acting' || curplayer.gameStatus === 'hit') {
-                    Controller.decisionAction(table);
+                    Controller.decisionAction(table, existsUser);
                 }
                 else {
                     table.increaseTurnCounter();
-                    Controller.manageTable(table);
+                    Controller.manageTable(table, existsUser);
                 }
             }
             else {
                 table.haveTurn();
                 setTimeout(function() {
-                    Controller.manageTable(table);
+                    Controller.manageTable(table, existsUser);
                 }, config.actionInterval);
             }
         }
@@ -730,36 +730,47 @@ class Controller {
             View.renderTable(table);
             table.blackjackClearPlayerHandsAndBets();
             table.increaseRoundCounter();
-            if (!table.isUserGameOver()) {
+
+            if (existsUser && !table.isGameOver('user')) {
+                table.setGamePhase('betting');
+                table.resetTurnCounter();
+            }
+            else if (!existsUser && !table.isGameOver('ai')) {
                 table.setGamePhase('betting');
                 table.resetTurnCounter();
             }
 
             setTimeout(function() {
-                Controller.manageTable(table);
+                Controller.manageTable(table, existsUser);
             }, config.judgmentTime);
 
         }
         else if (table.gamePhase === 'gameOver') {
             View.renderTable(table, undefined, table.resultsLog);
-            Controller.continueOrEnd(table);
+            Controller.continueOrEnd(table, existsUser);
         }
     }
 
 
-    static pushDealBtn(table) {
-        document.querySelector('.deal-btn').addEventListener('click', function () {
-            let totalBet = parseInt(document.querySelector('.total-bet').innerHTML.replace(/[^0-9]/g, ''));
+    static pushDealBtn(table, existsUser) {
+        table.decisionBetOfAI();
+        table.setGamePhase('acting');
 
-            if (totalBet === 0 || totalBet > table.getUserChips()) {
-                alert('invalid value');
-                return ;
-            }
-            table.setUserBet(totalBet);
-            table.decisionBetOfAI();
-            table.setGamePhase('acting');
-            Controller.manageTable(table);
-        })
+        if (existsUser) {
+            document.querySelector('.deal-btn').addEventListener('click', function () {
+                let totalBet = parseInt(document.querySelector('.total-bet').innerHTML.replace(/[^0-9]/g, ''));
+    
+                if (totalBet === 0 || totalBet > table.getUserChips()) {
+                    alert('invalid value');
+                    return ;
+                }
+                table.setUserBet(totalBet);
+                Controller.manageTable(table, existsUser);
+            })
+        }
+        else  {
+            Controller.manageTable(table, existsUser);
+        }
     }
 
     static pushIncreaseOrDecreaseBtn() {
@@ -781,18 +792,17 @@ class Controller {
         }
     }
 
-    static decisionAction(table) {
+    static decisionAction(table, existsUser) {
         let actions = document.querySelectorAll('.action-btn');
         for (let action of actions) {
             action.addEventListener('click', function () {
                 table.haveTurn(action.innerHTML.toLowerCase());
-                Controller.manageTable(table);
+                Controller.manageTable(table, existsUser);
             })
         }
     }
 
-
-    static continueOrEnd(table) {
+    static continueOrEnd(table, existsUser) {
         let continueOrEndBtn = document.querySelectorAll('.btn-continue-or-end');
         for (let btn of continueOrEndBtn) {
             btn.addEventListener('click', function() {
@@ -802,13 +812,11 @@ class Controller {
                 } 
                 else  {
                     table.resetTableStatus();
-                    Controller.manageTable(table);
+                    Controller.manageTable(table, existsUser);
                 }
             })
         }
     }
-
-
 }
 
 Controller.initialScreen();
