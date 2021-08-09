@@ -9,10 +9,16 @@
 .vh-100 {
     height:100vh;
 }
-.wager-btn, .deal-btn{
+.deal-btn{
     border-radius:100%;
     height: 4rem;
     width: 4rem;
     vertical-align: middle;
     border: 3px dashed rgb(168, 168, 168);
+}
+
+.log {
+    width: 1000px;
+    height: 700px;
+    overflow: auto;
 }
