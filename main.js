@@ -98,7 +98,7 @@ class Player {
         else {
             act = userAction;
         }
-        return new GameDecision(act, this.bet);
+        return act;
     }
 
     decisionBet(betDenominations) {
@@ -126,13 +126,6 @@ class Player {
     }
 }
 
-class GameDecision {
-
-    constructor(action, amount) {
-        this.action = action
-        this.amount = amount
-    }
-}
 
 class Table {
     constructor(gameType, userName, type, betDenominations = [1, 5,20,50,100]) {
@@ -163,11 +156,9 @@ class Table {
 
 
     evaluateMove(player, userData) {
-        let decision = player.promptPlayer(userData);
+        player.gameStatus = player.promptPlayer(userData);;
 
-        player.gameStatus = decision.action;
-
-        if (decision.action === 'hit') {
+        if (player.gameStatus === 'hit') {
             player.hand.push(this.deck.drawOne());
             let score = player.getHandScore();
             if (score > 21) {
@@ -175,11 +166,11 @@ class Table {
                 player.winAmount = -1 * player.bet;
             }
         }
-        else if (decision.action === 'double' && player.hand.length === 2) {
+        else if (player.gameStatus === 'double' && player.hand.length === 2) {
             player.hand.push(this.deck.drawOne());
             player.bet *= 2;
         }
-        else if (decision.action === 'surrender') {
+        else if (player.gameStatus === 'surrender') {
             player.winAmount = Math.floor(-1 * player.bet / 2);
         }
     }
@@ -194,22 +185,23 @@ class Table {
         let hasHouseBlackJack = houseHandScore === 21 && this.house.hand.length === 2;
 
         this.resultsLog.push(`Round: ${this.roundCounter}`);
+
         let playerResult = "";
         for (let player of this.players) {
             let hasPlayerBlackJack = player.getHandScore() === 21 && player.hand.length === 2;
             if (player.gameStatus === 'surrender' || player.gameStatus === 'bust') {
                 ;
             }
-            else if (player.gameStatus === 'double' && player.getHandScore() > 21) {
-                player.winAmount = -1 * player.bet;
+            else if (hasPlayerBlackJack) {
+                player.winAmount = hasHouseBlackJack ? 0 : Math.floor(player.bet * 1.5);
             }
             else if (hasHouseBlackJack) {
                 player.winAmount = hasPlayerBlackJack ? 0 : -1 * player.bet;
             }
             else if (this.house.gameStatus === 'bust' || player.getHandScore() > houseHandScore) {
-                player.winAmount = hasPlayerBlackJack ? Math.floor(player.bet * 1.5) : player.bet;
+                player.winAmount = player.bet;
             }
-            else if (this.house.gameStatus === 'stand' && houseHandScore > player.getHandScore()) {
+            else if (player.getHandScore() > 21 || houseHandScore > player.getHandScore()) {
                 player.winAmount = -1 * player.bet;
             }
             else if (houseHandScore === player.getHandScore()) {
@@ -286,11 +278,8 @@ class Table {
     }
 
     isGameOver(type) {
-        let hashMap = {
-            'gameOver' : true
-        }
         for (let player of this.players) {
-            if (player.type === type && hashMap[player.gameStatus] != undefined) {
+            if (player.type === type && player.gameStatus === 'gameOver') {
                 this.gamePhase = 'gameOver';
                 return true;
             }
@@ -360,7 +349,6 @@ const config = {
     gameDiv : document.getElementById('gameDiv'),
     judgmentTime : 3000,
     actionInterval : 2000,
-
 }
 
 const ids = {
@@ -641,14 +629,12 @@ class View {
         config.gameDiv.append(div);        
     }
 
-
     static renderLogPage(table, gameResults) {
         let h2 = document.createElement('h2');
         h2.classList.add('text-white', 'pb-3');
         h2.innerHTML = table.gameType;
 
         document.getElementById(ids.logPage).append(h2);
-
 
         let logDiv = document.createElement('div');
         logDiv.classList.add('text-white', 'd-flex', 'flex-column', 'align-items-center', 'log');
@@ -750,7 +736,6 @@ class Controller {
         }
     }
 
-
     static pushDealBtn(table, existsUser) {
         table.decisionBetOfAI();
         table.setGamePhase('acting');
@@ -758,7 +743,6 @@ class Controller {
         if (existsUser) {
             document.querySelector('.deal-btn').addEventListener('click', function () {
                 let totalBet = parseInt(document.querySelector('.total-bet').innerHTML.replace(/[^0-9]/g, ''));
-    
                 if (totalBet === 0 || totalBet > table.getUserChips()) {
                     alert('invalid value');
                     return ;
@@ -786,7 +770,6 @@ class Controller {
                     return ;
                 }
                 View.renderTotalBet();
-                
             })
         }
     }
@@ -817,3 +800,27 @@ class Controller {
 }
 
 Controller.initialScreen();
+
+
+// CLI Mode
+// let table1 = new Table('blackjack', 'ai', 'ai');
+// while (table1.gamePhase != 'gameOver') {
+//     if (table1.gamePhase === 'betting') {
+//         table1.blackjackAssignPlayerHands();
+//         table1.decisionBetOfAI();
+//         table1.setGamePhase('acting');
+//     }
+//     if (table1.gamePhase === 'acting') {
+//         table1.haveTurn();
+//     }
+//     else if (table1.gamePhase === 'evaluation') {
+//         table1.blackjackEvaluateAndGetRoundResults();
+//         table1.blackjackClearPlayerHandsAndBets();
+//         table1.increaseRoundCounter();
+//         if (!table1.isGameOver('ai')) {
+//             table1.setGamePhase('betting');
+//             table1.resetTurnCounter();
+//         }
+//     }
+// }
+// console.log(table1.resultsLog);
