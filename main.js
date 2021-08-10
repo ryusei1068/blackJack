@@ -343,7 +343,7 @@ class Table {
     }
 
     getUserObj() {
-        for (let player of table.players) {
+        for (let player of this.players) {
             if (player.type === 'user') return player;
         }
         return null;
@@ -578,7 +578,6 @@ class View {
 
     static renderActionsBtn(table) {
         let user = table.getUserObj();
-
         let div = document.createElement('div');
         div.classList.add('d-flex');
         div.id = 'actionsDiv';
