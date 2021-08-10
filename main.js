@@ -196,10 +196,13 @@ class Table {
             else if (hasHouseBlackJack) {
                 player.winAmount = hasPlayerBlackJack ? 0 : -1 * player.bet;
             }
+            else if (player.getHandScore() > 21) {
+                player.winAmount = -1 * player.bet;
+            }
             else if (this.house.gameStatus === 'bust' || player.getHandScore() > houseHandScore) {
                 player.winAmount = player.bet;
             }
-            else if (player.getHandScore() > 21 || houseHandScore > player.getHandScore()) {
+            else if (houseHandScore > player.getHandScore()) {
                 player.winAmount = -1 * player.bet;
             }
             else if (houseHandScore === player.getHandScore()) {
