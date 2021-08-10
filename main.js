@@ -349,7 +349,7 @@ class Table {
 
     decisionBetOfAI() {
         for (let player of this.players) {
-            if (player.type === 'ai') {
+            if (player.type === 'ai' && player.gameStatus != 'gameOver') {
                 player.decisionBet(this.betDenominations);
             }
         }
@@ -367,7 +367,7 @@ const ids = {
     acitionsAndBetsDiv : 'acitionsAndBetsDiv',
     table : 'table',
     playerSide : 'player-side',
-    betsDiv : 'betsDiv',
+    betsDiv : 'betsDiv', 
     logPage : 'logPage',
 }
 
@@ -743,7 +743,6 @@ class Controller {
             setTimeout(function() {
                 Controller.manageTable(table, existsUser);
             }, config.judgmentTime);
-
         }
         else if (table.gamePhase === 'gameOver') {
             View.renderTable(table, undefined, table.resultsLog);
@@ -793,29 +792,27 @@ class Controller {
     }
 
     static decisionAction(table, existsUser) {
-        let actions = document.querySelectorAll('.action-btn');
-        for (let action of actions) {
+        document.querySelectorAll('.action-btn').forEach(action => {
             action.addEventListener('click', function () {
                 table.haveTurn(action.innerHTML.toLowerCase());
                 Controller.manageTable(table, existsUser);
             })
-        }
+        });
     }
 
     static continueOrEnd(table, existsUser) {
-        let continueOrEndBtn = document.querySelectorAll('.btn-continue-or-end');
-        for (let btn of continueOrEndBtn) {
-            btn.addEventListener('click', function() {
-                if (btn.innerHTML.toLowerCase() === 'loginpage') {
+        document.querySelectorAll('.btn-continue-or-end').forEach(ele => {
+            ele.addEventListener('click', function () {
+                if (ele.innerHTML.toLowerCase() === 'loginpage') {
                     View.initialize(config.gameDiv);
                     Controller.initialScreen();
-                } 
-                else  {
+                }
+                else {
                     table.resetTableStatus();
                     Controller.manageTable(table, existsUser);
                 }
-            })
-        }
+            });
+        });
     }
 }
 
