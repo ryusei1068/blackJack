@@ -52,7 +52,6 @@ class Deck {
         this.cards = gameType === "blackjack" ? Deck.generateDeck() : [];
     }
     
-
     drawOne(){
         return this.cards.pop();
     }
@@ -69,7 +68,6 @@ class Player {
         this.winAmount = 0 
         this.gameStatus = 'betting' 
     }
-
 
     static getRandomInteger(max, min) {
         return Math.floor(Math.random() * (max - min) + min);
@@ -343,6 +341,13 @@ class Table {
             }
         }
     }
+
+    getUserObj() {
+        for (let player of table.players) {
+            if (player.type === 'user') return player;
+        }
+        return null;
+    }
 }
 
 const config = {
@@ -572,13 +577,7 @@ class View {
     }
 
     static renderActionsBtn(table) {
-        let user = undefined;
-        for (let player of table.players) {
-            if (player.type === 'user') {
-                user = player;
-                break;
-            }
-        }
+        let user = table.getUserObj();
 
         let div = document.createElement('div');
         div.classList.add('d-flex');
@@ -600,7 +599,7 @@ class View {
                     </div>
                     `
 
-        if (user != undefined) {
+        if (user != null) {
             if (user.bet * 2 > user.chips) {
                 div.querySelector('.double').disabled = true;
             }
