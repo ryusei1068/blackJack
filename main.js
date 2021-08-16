@@ -101,7 +101,7 @@ class Player {
 
     decisionBet(betDenominations) {
         while (true) {
-            let i = Math.floor(Math.random() * betDenominations.length);
+            let i = Player.getRandomInteger(betDenominations.length, 0);
             this.bet = betDenominations[i];
             if (this.bet <= this.chips) break;
         }
@@ -320,11 +320,10 @@ class Table {
         this.roundCounter = 1;
     } 
 
-    resetTableStatus() {
+    resetTableAndPlayerStatus() {
         this.setGamePhase('betting');
-        this.resetRoundCounter();
         this.resetTurnCounter();
-        this.resultsLog = [];
+        this.resetRoundCounter();
         for (let player of this.players) {
             player.gameStatus = 'betting';
             player.hand = [new Card('?', '?'), new Card('?', '?')];
@@ -408,18 +407,14 @@ class View {
             View.renderLogPage(table, gameResults);
         }
         else {
-            View.viewOperation(table, curIndex);
+            View.initialize(config.gameDiv);
+            View.setTable();
+            View.renderHouse(table.house);
+            View.setPlayerSide();
+            View.renderPlayers(table, curIndex);
+            View.setActionsAndBet();
+            View.renderActionsAndBet(table);
         }
-    }
-
-    static viewOperation(table, curIndex) {
-        View.initialize(config.gameDiv);
-        View.setTable();
-        View.renderHouse(table.house);
-        View.setPlayerSide();
-        View.renderPlayers(table, curIndex);
-        View.setActionsAndBet();
-        View.renderActionsAndBet(table);
     }
 
     static renderHouse(house) {
@@ -641,8 +636,7 @@ class View {
         logDiv.classList.add('text-white', 'd-flex', 'flex-column', 'align-items-center', 'log');
 
         for (let i = 0; i < gameResults.length; i++) {
-            let tag = null;
-            tag = i % 2 === 0 ? document.createElement('h4') : document.createElement('ul');
+            let tag = i % 2 === 0 ? document.createElement('h4') : document.createElement('ul');
             tag.innerHTML = gameResults[i];
             logDiv.append(tag);
         }
@@ -718,11 +712,8 @@ class Controller {
             table.blackjackClearPlayerHandsAndBets();
             table.increaseRoundCounter();
 
-            if (existsUser && !table.isGameOver('user')) {
-                table.setGamePhase('betting');
-                table.resetTurnCounter();
-            }
-            else if (!existsUser && !table.isGameOver('ai')) {
+            if ((existsUser && !table.isGameOver('user')) || 
+                (!existsUser && !table.isGameOver('ai'))) {
                 table.setGamePhase('betting');
                 table.resetTurnCounter();
             }
@@ -792,7 +783,7 @@ class Controller {
                     Controller.initialScreen();
                 }
                 else {
-                    table.resetTableStatus();
+                    table.resetTableAndPlayerStatus();
                     Controller.manageTable(table, existsUser);
                 }
             });
